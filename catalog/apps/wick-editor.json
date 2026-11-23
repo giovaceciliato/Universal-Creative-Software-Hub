@@ -1,0 +1,19 @@
+{
+  "id": "wick-editor",
+  "name": "Wick Editor",
+  "publisher": "Wick Editor project",
+  "description": "Browser-based interactive animation, games and multimedia storytelling.",
+  "categories": [
+    "animation",
+    "interactive"
+  ],
+  "platforms": [
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.wickeditor.com/",
+    "download": "https://www.wickeditor.com/"
+  },
+  "integrations": {}
+}

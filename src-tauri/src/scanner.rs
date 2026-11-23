@@ -88,6 +88,54 @@ fn entries() -> Result<Vec<CatalogEntry>, String> {
         include_str!("../../catalog/apps/craft-anything.json"),
         include_str!("../../catalog/apps/solidcraft.json"),
         include_str!("../../catalog/apps/mailcraft.json"),
+        include_str!("../../catalog/apps/audacity.json"),
+        include_str!("../../catalog/apps/bforartists.json"),
+        include_str!("../../catalog/apps/blockbench.json"),
+        include_str!("../../catalog/apps/darktable.json"),
+        include_str!("../../catalog/apps/davinci-resolve-free.json"),
+        include_str!("../../catalog/apps/digikam.json"),
+        include_str!("../../catalog/apps/drawpile.json"),
+        include_str!("../../catalog/apps/excalidraw.json"),
+        include_str!("../../catalog/apps/flowblade.json"),
+        include_str!("../../catalog/apps/fontforge.json"),
+        include_str!("../../catalog/apps/freecad.json"),
+        include_str!("../../catalog/apps/gimp.json"),
+        include_str!("../../catalog/apps/glaxnimate.json"),
+        include_str!("../../catalog/apps/godot-engine.json"),
+        include_str!("../../catalog/apps/graphite.json"),
+        include_str!("../../catalog/apps/hydrogen.json"),
+        include_str!("../../catalog/apps/inkscape.json"),
+        include_str!("../../catalog/apps/kdenlive.json"),
+        include_str!("../../catalog/apps/lazpaint.json"),
+        include_str!("../../catalog/apps/libreoffice-draw.json"),
+        include_str!("../../catalog/apps/lmms.json"),
+        include_str!("../../catalog/apps/makehuman.json"),
+        include_str!("../../catalog/apps/material-maker.json"),
+        include_str!("../../catalog/apps/meshlab.json"),
+        include_str!("../../catalog/apps/meshroom.json"),
+        include_str!("../../catalog/apps/mixxx.json"),
+        include_str!("../../catalog/apps/musescore-studio.json"),
+        include_str!("../../catalog/apps/mypaint.json"),
+        include_str!("../../catalog/apps/natron.json"),
+        include_str!("../../catalog/apps/olive.json"),
+        include_str!("../../catalog/apps/openscad.json"),
+        include_str!("../../catalog/apps/openshot.json"),
+        include_str!("../../catalog/apps/opentoonz.json"),
+        include_str!("../../catalog/apps/pencil2d.json"),
+        include_str!("../../catalog/apps/penpot.json"),
+        include_str!("../../catalog/apps/photodemon.json"),
+        include_str!("../../catalog/apps/pinta.json"),
+        include_str!("../../catalog/apps/qtractor.json"),
+        include_str!("../../catalog/apps/rawtherapee.json"),
+        include_str!("../../catalog/apps/scribus.json"),
+        include_str!("../../catalog/apps/shotcut.json"),
+        include_str!("../../catalog/apps/sonic-pi.json"),
+        include_str!("../../catalog/apps/svg-edit.json"),
+        include_str!("../../catalog/apps/sweet-home-3d.json"),
+        include_str!("../../catalog/apps/synfig-studio.json"),
+        include_str!("../../catalog/apps/tahoma2d.json"),
+        include_str!("../../catalog/apps/wick-editor.json"),
+        include_str!("../../catalog/apps/wings3d.json"),
     ]
         .iter()
         .map(|data| serde_json::from_str(data).map_err(|e| format!("Invalid catalog manifest: {e}")))
@@ -313,11 +361,13 @@ mod tests {
     #[test]
     fn manifests_are_loadable() {
         let manifests = entries().unwrap();
-        assert_eq!(manifests.len(), 21);
+        assert_eq!(manifests.len(), 69);
         assert!(manifests.iter().any(|app| app.id == "blender"));
         assert!(manifests.iter().any(|app| app.id == "krita"));
         assert!(manifests.iter().any(|app| app.id == "anicraft"));
         assert!(manifests.iter().any(|app| app.id == "craft-anything"));
+        assert!(manifests.iter().any(|app| app.id == "gimp"));
+        assert!(manifests.iter().any(|app| app.id == "penpot"));
     }
     #[test]
     fn version_missing_is_not_installed() {

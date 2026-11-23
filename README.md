@@ -175,3 +175,38 @@ No automatic software update check is claimed by the version-change counter.
 
 See [Downloads activity](docs/DOWNLOADS.md) and
 [Signed ArtCraft sync](docs/ARTCRAFT_SYNC.md).
+
+## Creative Top 50 collection (2026)
+
+The original **50 recommended free creative applications** are now in Discover,
+with no duplicate listings for Blender or Krita. This adds **48** new
+applications to the previous 21-entry catalog, for **69 bundled listings**.
+
+Select **Creative Top 50** in Discover to show the selected 50. Other catalog
+entries, including ArtCraft Launcher community apps, remain available in
+**All software**.
+
+The collection includes drawing, illustration, photography, publishing, UI,
+3D, CAD, animation, video, audio, and creative coding. Web-only tools such as
+Excalidraw, Penpot, Graphite, SVG-Edit and Wick Editor open in a browser
+instead of pretending to install a native app. DaVinci Resolve Free is
+proprietary freeware rather than open source; Fedora is not an officially
+supported Linux host for its own installer.
+
+On **Fedora Workstation**, an initial set of **23 reviewed Fedora RPM
+packages** can be installed directly via DNF after user confirmation and
+the normal PolicyKit authorization prompt. Other entries continue to open
+official publisher distribution pages. No new manifest automatically
+authorizes executing an installer.
+
+See [Creative Top 50](docs/CREATIVE_TOP_50.md) and
+[Native installation](docs/INSTALLATION.md).
+
+### Try this branch
+
+```sh
+git fetch origin
+git switch --track origin/feat/expand-50-creative-software-catalog
+npm install
+npm run tauri dev
+```

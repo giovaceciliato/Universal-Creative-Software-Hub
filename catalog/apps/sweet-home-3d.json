@@ -1,0 +1,32 @@
+{
+  "id": "sweet-home-3d",
+  "name": "Sweet Home 3D",
+  "publisher": "Sweet Home 3D project",
+  "description": "2D floor planning, interior furnishing and 3D home visualization.",
+  "categories": [
+    "architecture",
+    "3d"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.sweethome3d.com/",
+    "download": "https://www.sweethome3d.com/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "SweetHome3D.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "SweetHome3D"
+      ]
+    }
+  }
+}

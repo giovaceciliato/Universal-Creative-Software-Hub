@@ -1,0 +1,43 @@
+{
+  "id": "blockbench",
+  "name": "Blockbench",
+  "publisher": "Blockbench contributors",
+  "description": "Low-poly 3D modeling, voxel-style characters and animation tools.",
+  "categories": [
+    "3d",
+    "animation"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux",
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.blockbench.net/",
+    "download": "https://www.blockbench.net/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "blockbench.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Blockbench.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "blockbench"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/blockbench.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

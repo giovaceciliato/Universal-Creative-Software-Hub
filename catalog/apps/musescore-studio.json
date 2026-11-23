@@ -1,0 +1,35 @@
+{
+  "id": "musescore-studio",
+  "name": "MuseScore Studio",
+  "publisher": "MuseScore contributors",
+  "description": "Music notation, score editing, playback and composition.",
+  "categories": [
+    "audio",
+    "notation"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://musescore.org/",
+    "download": "https://musescore.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "musescore.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "musescore"
+      ],
+      "rpmNames": [
+        "musescore"
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "davinci-resolve-free",
+  "name": "DaVinci Resolve Free",
+  "publisher": "Blackmagic Design",
+  "description": "Free professional video editing and color grading; Studio features require a paid license.",
+  "categories": [
+    "video",
+    "vfx"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "freeware",
+  "links": {
+    "website": "https://www.blackmagicdesign.com/products/davinciresolve",
+    "download": "https://www.blackmagicdesign.com/products/davinciresolve"
+  },
+  "integrations": {},
+  "icon": {
+    "path": "/icons/davinciresolve.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

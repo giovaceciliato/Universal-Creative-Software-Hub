@@ -1,0 +1,45 @@
+{
+  "id": "kdenlive",
+  "name": "Kdenlive",
+  "publisher": "KDE Community",
+  "description": "Nonlinear multitrack video editing with effects and production tools.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://kdenlive.org/",
+    "download": "https://kdenlive.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "kdenlive.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Kdenlive.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "kdenlive"
+      ],
+      "rpmNames": [
+        "kdenlive"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/kdenlive.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

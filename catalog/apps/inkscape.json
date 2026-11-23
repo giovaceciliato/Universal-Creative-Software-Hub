@@ -1,0 +1,45 @@
+{
+  "id": "inkscape",
+  "name": "Inkscape",
+  "publisher": "Inkscape project",
+  "description": "Scalable vector graphics, illustration, logos and print-ready artwork.",
+  "categories": [
+    "vector",
+    "illustration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://inkscape.org/",
+    "download": "https://inkscape.org/release/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "inkscape.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Inkscape.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "inkscape"
+      ],
+      "rpmNames": [
+        "inkscape"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/inkscape.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

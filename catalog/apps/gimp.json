@@ -1,0 +1,45 @@
+{
+  "id": "gimp",
+  "name": "GIMP",
+  "publisher": "GIMP Development Team",
+  "description": "Open-source image editing, retouching, layer-based compositing and raster artwork.",
+  "categories": [
+    "image-editing",
+    "photography"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.gimp.org/",
+    "download": "https://www.gimp.org/downloads/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "gimp.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "GIMP.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "gimp"
+      ],
+      "rpmNames": [
+        "gimp"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/gimp.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

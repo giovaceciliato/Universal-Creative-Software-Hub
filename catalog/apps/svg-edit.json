@@ -1,0 +1,19 @@
+{
+  "id": "svg-edit",
+  "name": "SVG-Edit",
+  "publisher": "SVG-Edit contributors",
+  "description": "In-browser editor for creating and editing scalable vector graphics.",
+  "categories": [
+    "vector",
+    "illustration"
+  ],
+  "platforms": [
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://svg-edit.github.io/svgedit/",
+    "download": "https://svg-edit.github.io/svgedit/"
+  },
+  "integrations": {}
+}

@@ -9,6 +9,7 @@ import {
   Search, Settings2, Trash2, X,
 } from "lucide-react";
 import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } from "./catalog";
+import featured50 from "../catalog/collections/creative-top-50.json";
 import { loadTransferHistory, saveTransferHistory, formatBytes, transferCounts, type TransferTask } from "./downloadActivity";
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
 import type { InstalledMatch } from "./integrations/contracts";
@@ -52,6 +53,7 @@ interface InstallOutcome { appId: string; status: "installed" | "manual-step"; m
 interface InstallProgress { appId: string; received: number; total: number; }
 
 const native = isTauri();
+const featuredSoftwareIds = new Set<string>(featured50.ids);
 const nativeInstallIds = new Set(
   bundledCatalog.filter(app =>
     app.id === "blender" || app.id === "krita" || app.publisher === "ArtCraft Team",
@@ -59,7 +61,7 @@ const nativeInstallIds = new Set(
 );
 const devicePlatform = localPlatform();
 const platforms: Record<Platform, string> = {
-  windows: "Windows", macos: "macOS", linux: "Fedora / Linux",
+  windows: "Windows", macos: "macOS", linux: "Fedora / Linux", web: "Web",
 };
 
 function useStored<T>(key: string, initial: T, guard: (v: unknown) => v is T) {
@@ -108,6 +110,7 @@ const nav: { key: View; label: string; icon: typeof Compass }[] = [
 
 export default function App() {
   const [view, setView] = useState<View>("discover");
+  const [installableIds, setInstallableIds] = useState<Set<string>>(nativeInstallIds);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [platform, setPlatform] = useState<Platform | "all">("all");
@@ -134,6 +137,15 @@ export default function App() {
   const [installing, setInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState<number | null>(null);
   const [installError, setInstallError] = useState("");
+
+  useEffect(() => {
+    if (!native) return;
+    let cancelled = false;
+    void invoke<string[]>("installable_app_ids")
+      .then(ids => { if (!cancelled) setInstallableIds(new Set(ids)); })
+      .catch(() => { /* Keep the built-in allowlist if this command is unavailable. */ });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!native) return;
@@ -215,7 +227,7 @@ export default function App() {
   const saved = catalog.filter(app => favorites.includes(app.id));
   const filtered = useMemo(() => catalog.filter(app => {
     const q = query.trim().toLowerCase();
-    return (category === "all" || app.categories.includes(category)) &&
+    return (category === "all" || (category === "top-50" ? featuredSoftwareIds.has(app.id) : app.categories.includes(category))) &&
       (platform === "all" || app.platforms.includes(platform)) &&
       (!q || [app.name, app.publisher, app.description, ...app.categories]
         .some(value => value.toLowerCase().includes(q)));
@@ -342,11 +354,7 @@ export default function App() {
   }
 
   function InstallButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
-    if (!nativeInstallIds.has(app.id)) {
-      return <button type="button" className="outline-button" onClick={() => { void openWebsite(app.links.download); }}>
-        Publisher page <ArrowUpRight size={15}/>
-      </button>;
-    }
+    if (!installableIds.has(app.id)) return null;
     const installed = scanReport?.matches.some(match =>
       match.appId === app.id && match.confidence === "exact-package-id",
     ) ?? false;
@@ -392,7 +400,7 @@ export default function App() {
       : job?.status === "queued" ? "Queued"
       : done ? "Downloaded"
       : offer ? `Download ${small ? "" : offer.version}`.trim()
-      : "Official page";
+      : app.platforms.length === 1 && app.platforms[0] === "web" ? "Open web app" : "Official page";
     return <button
       type="button"
       className="outline-button"
@@ -548,11 +556,12 @@ export default function App() {
               <label className="search"><Search size={19} aria-hidden="true"/><input aria-label="Search software" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search software, categories, publishers" /></label>
               <label className="platform-filter"><Settings2 size={17}/><select aria-label="Operating system" value={platform} onChange={e => setPlatform(e.target.value as Platform | "all")}>
                 <option value="all">All platforms</option>
-                <option value="windows">Windows</option><option value="macos">macOS</option><option value="linux">Fedora / Linux</option>
+                <option value="windows">Windows</option><option value="macos">macOS</option><option value="linux">Fedora / Linux</option><option value="web">Web apps</option>
               </select></label>
             </div>
             <div className="category-tabs" role="group" aria-label="Categories">
               <button type="button" className={category === "all" ? "category-tab active" : "category-tab"} onClick={() => setCategory("all")}>All software</button>
+              <button type="button" className={category === "top-50" ? "category-tab active" : "category-tab"} onClick={() => setCategory("top-50")}>Creative Top 50</button>
               {categories.map(item => <button key={item} type="button" className={category === item ? "category-tab active" : "category-tab"} onClick={() => setCategory(item)}>{categoryLabel(item)}</button>)}
             </div>
             <div className="list-heading"><h2>Explore</h2><span>{filtered.length} {filtered.length === 1 ? "app" : "apps"}</span></div>

@@ -1,0 +1,19 @@
+{
+  "id": "graphite",
+  "name": "Graphite",
+  "publisher": "Graphite contributors",
+  "description": "Experimental browser-based vector design and procedural graphics using nodes.",
+  "categories": [
+    "vector",
+    "procedural"
+  ],
+  "platforms": [
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://graphite.art/",
+    "download": "https://editor.graphite.art/"
+  },
+  "integrations": {}
+}

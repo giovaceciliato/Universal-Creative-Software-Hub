@@ -83,3 +83,15 @@ be verified, the UI continues with the 19 bundled ArtCraft entries.
 
 The remote catalog is read-only metadata: no new installer executable IDs
 are accepted from a network response.
+
+## Featured 50 collection
+
+`catalog/collections/creative-top-50.json` is validated for exactly 50
+unique existing catalog IDs during `npm run validate:catalog`.
+The catalog contains 69 local entries after this change.
+Web apps use a distinct `web` platform and open official URLs instead
+of going through OS package managers.
+
+The native scanner bundles all local catalog JSON files as read-only
+matching metadata. The Rust installer has a separate allowlist for 23
+verified Fedora RPM names; a manifest cannot change the allowlist.

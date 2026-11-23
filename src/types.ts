@@ -1,4 +1,5 @@
-export type Platform = "windows" | "macos" | "linux";
+export type Platform = "windows" | "macos" | "linux" | "web";
+export type NativePlatform = Exclude<Platform, "web">;
 export type PricingModel = "free-open-source" | "freeware";
 export type PackageManager = "winget" | "homebrew" | "dnf" | "flatpak";
 
@@ -25,7 +26,7 @@ export interface CatalogApp {
   platforms: Platform[];
   pricingModel: PricingModel;
   icon?: { path: string; source: string; license: string };
-  integrations?: Partial<Record<Platform, PlatformIntegration>>;
+  integrations?: Partial<Record<NativePlatform, PlatformIntegration>>;
   links: {
     website: string;
     download: string;

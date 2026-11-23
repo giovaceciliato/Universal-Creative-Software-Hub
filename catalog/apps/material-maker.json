@@ -1,0 +1,32 @@
+{
+  "id": "material-maker",
+  "name": "Material Maker",
+  "publisher": "Material Maker project",
+  "description": "Node-based procedural PBR material and texture authoring for 3D art.",
+  "categories": [
+    "3d",
+    "materials"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://materialmaker.org/",
+    "download": "https://materialmaker.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "material_maker.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "material_maker"
+      ]
+    }
+  }
+}

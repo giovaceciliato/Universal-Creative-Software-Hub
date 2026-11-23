@@ -1,0 +1,37 @@
+{
+  "id": "olive",
+  "name": "Olive",
+  "publisher": "Olive contributors",
+  "description": "Experimental nonlinear video editor with node-based processing; alpha software.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.olivevideoeditor.org/",
+    "download": "https://www.olivevideoeditor.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "olive-editor.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Olive.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "olive-editor"
+      ]
+    }
+  }
+}

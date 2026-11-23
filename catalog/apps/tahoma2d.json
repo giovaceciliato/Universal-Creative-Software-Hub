@@ -1,0 +1,37 @@
+{
+  "id": "tahoma2d",
+  "name": "Tahoma2D",
+  "publisher": "Tahoma2D contributors",
+  "description": "Frame-by-frame and cutout 2D animation including stop-motion features.",
+  "categories": [
+    "animation",
+    "digital-painting"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://tahoma2d.org/",
+    "download": "https://tahoma2d.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "tahoma2d.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Tahoma2D.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "tahoma2d"
+      ]
+    }
+  }
+}

@@ -89,3 +89,15 @@ A user can find Blender or Krita, open its official download page, add a locally
 - [ ] Independent signed catalog cache for offline newly introduced apps
 - [ ] Improve native download pause/resume, cancellation and interrupted-job recovery
 - [ ] Verified version comparison and automatic update availability checks
+
+## Creative Top 50 expansion
+- [x] Add all 50 selected free creative applications without duplicates
+- [x] Add web-only platform classification and browser link handling
+- [x] Add the **Creative Top 50** Discover collection filter
+- [x] Include verified-source local icons for supported projects
+- [x] Extend the read-only native scanner with catalog manifests
+- [x] Support confirmed Fedora DNF installation for 23 vetted new packages
+- [ ] Verify Windows WinGet and macOS Homebrew identities individually
+- [ ] Add direct, checksum-verified publisher downloads where offered
+- [ ] Verify portability and installation paths on all three desktop OSs
+- [ ] Implement genuine update feeds and verified installed-vs-available versions

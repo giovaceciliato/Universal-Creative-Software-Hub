@@ -1,0 +1,37 @@
+{
+  "id": "lazpaint",
+  "name": "LazPaint",
+  "publisher": "LazPaint contributors",
+  "description": "Raster image editing with layers, antialiasing, vector shapes and effects.",
+  "categories": [
+    "image-editing",
+    "illustration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://lazpaint.github.io/",
+    "download": "https://lazpaint.github.io/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "lazpaint.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "LazPaint.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "lazpaint"
+      ]
+    }
+  }
+}

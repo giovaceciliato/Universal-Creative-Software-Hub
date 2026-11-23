@@ -1,0 +1,45 @@
+{
+  "id": "freecad",
+  "name": "FreeCAD",
+  "publisher": "FreeCAD project",
+  "description": "Open-source parametric 3D CAD modeling for engineering and design.",
+  "categories": [
+    "3d",
+    "cad"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.freecad.org/",
+    "download": "https://www.freecad.org/downloads.php"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "FreeCAD.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "FreeCAD.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "FreeCAD"
+      ],
+      "rpmNames": [
+        "freecad"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/freecad.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

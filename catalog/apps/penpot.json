@@ -1,0 +1,24 @@
+{
+  "id": "penpot",
+  "name": "Penpot",
+  "publisher": "Penpot",
+  "description": "Browser-based interface design, prototyping and open design systems.",
+  "categories": [
+    "ui-design",
+    "prototyping"
+  ],
+  "platforms": [
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://penpot.app/",
+    "download": "https://design.penpot.app/"
+  },
+  "integrations": {},
+  "icon": {
+    "path": "/icons/penpot.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

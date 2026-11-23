@@ -1,0 +1,40 @@
+{
+  "id": "shotcut",
+  "name": "Shotcut",
+  "publisher": "Shotcut project",
+  "description": "Cross-platform timeline video editing, filters and media conversion.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.shotcut.org/",
+    "download": "https://www.shotcut.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "shotcut.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Shotcut.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "shotcut"
+      ],
+      "rpmNames": [
+        "shotcut"
+      ]
+    }
+  }
+}

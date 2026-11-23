@@ -1,0 +1,28 @@
+{
+  "id": "qtractor",
+  "name": "Qtractor",
+  "publisher": "Qtractor project",
+  "description": "Linux digital audio workstation for multitrack audio and MIDI.",
+  "categories": [
+    "audio",
+    "music-production"
+  ],
+  "platforms": [
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://qtractor.org/",
+    "download": "https://qtractor.org/"
+  },
+  "integrations": {
+    "linux": {
+      "executableNames": [
+        "qtractor"
+      ],
+      "rpmNames": [
+        "qtractor"
+      ]
+    }
+  }
+}

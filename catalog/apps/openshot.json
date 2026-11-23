@@ -1,0 +1,40 @@
+{
+  "id": "openshot",
+  "name": "OpenShot",
+  "publisher": "OpenShot Studios",
+  "description": "Accessible nonlinear video editor with transitions and keyframes.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.openshot.org/",
+    "download": "https://www.openshot.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "openshot-qt.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "OpenShot.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "openshot-qt"
+      ],
+      "rpmNames": [
+        "openshot"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "libreoffice-draw",
+  "name": "LibreOffice Draw",
+  "publisher": "The Document Foundation",
+  "description": "Vector illustrations, diagrams and page layouts within LibreOffice.",
+  "categories": [
+    "vector",
+    "publishing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.libreoffice.org/discover/draw/",
+    "download": "https://www.libreoffice.org/download/download-libreoffice/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "libreoffice.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "libreoffice"
+      ],
+      "rpmNames": [
+        "libreoffice-draw"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/libreoffice.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "openscad",
+  "name": "OpenSCAD",
+  "publisher": "OpenSCAD contributors",
+  "description": "Script-based solid modeling for precise parametric 3D objects.",
+  "categories": [
+    "3d",
+    "cad"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://openscad.org/",
+    "download": "https://openscad.org/downloads.html"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "openscad.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "OpenSCAD.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "openscad"
+      ],
+      "rpmNames": [
+        "openscad"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/openscad.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

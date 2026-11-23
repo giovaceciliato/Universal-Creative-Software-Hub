@@ -50,3 +50,24 @@ Official ArtCraft Launcher **community apps** SolidCraft and MailCraft
 are available for discovery and through publisher download pages, but
 are **not** added to the native installation allowlist by the signed
 catalog. Additional installer support requires review.
+
+## Creative Top 50: Fedora package installs
+
+A subset of **23** new catalog entries has a reviewed Fedora repository
+package, installed using the existing system-authorized DNF/PolicyKit flow:
+GIMP, darktable, RawTherapee, digiKam, MyPaint, Pinta, Inkscape, Scribus,
+LibreOffice Draw, FontForge, FreeCAD, OpenSCAD, MeshLab, Godot Engine,
+Kdenlive, Shotcut, OpenShot, Flowblade, Audacity, LMMS, Hydrogen, Qtractor,
+and Mixxx.
+
+These exact package IDs are maintained in `FEDORA_PACKAGES` inside
+`src-tauri/src/installations.rs`, separately from the JSON manifests.
+An `installable_app_ids` native command reports current OS capabilities
+to the UI, so unsupported systems are not offered Fedora DNF actions.
+
+This phase does not add unchecked Windows installers or Homebrew commands;
+for nonconfigured apps the hub links to their official publishers instead.
+A successful OS package command should still be followed by **Scan computer**
+to verify actual installation. Third-party update checks remain unimplemented.
+
+Fedora reference: https://packages.fedoraproject.org/

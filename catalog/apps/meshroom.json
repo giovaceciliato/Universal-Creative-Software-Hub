@@ -1,0 +1,31 @@
+{
+  "id": "meshroom",
+  "name": "Meshroom",
+  "publisher": "AliceVision Association",
+  "description": "Open-source photogrammetry and 3D scene reconstruction from photographs.",
+  "categories": [
+    "3d",
+    "photogrammetry"
+  ],
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://meshroom.org/",
+    "download": "https://meshroom.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "Meshroom.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "Meshroom"
+      ]
+    }
+  }
+}

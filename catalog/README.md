@@ -52,3 +52,19 @@ Manifests remain metadata only. Native installation plans and commands are
 defined in a separate allowlisted Rust module, independent of catalog JSON
 fields. The ArtCraft packages are resolved only from the publisher's curated
 GitHub repositories. See [INSTALLATION.md](../docs/INSTALLATION.md).
+
+## Curated collection and web-app entries
+
+`catalog/collections/creative-top-50.json` stores the canonical **50**
+recommended applications in ranked order. Blender and Krita are reused
+from their original manifests, not duplicated.
+
+The platform list now accepts `web` in addition to `windows`, `macos`
+and `linux`. A web-only entry has no pretend native installation
+package. Browser support on a multiplatform app such as Blockbench is
+represented alongside its actual desktop platforms.
+
+Detection hints remain untrusted, read-only *candidate identifiers*.
+Installation package names for verified Fedora applications live
+**separately** in the backend allowlist; catalog editors cannot add
+arbitrary OS commands or gain executable install permissions.

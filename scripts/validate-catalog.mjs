@@ -3,7 +3,7 @@ import { join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const directory = fileURLToPath(new URL("../catalog/apps/", import.meta.url));
-const allowedPlatforms = new Set(["windows", "macos", "linux"]);
+const allowedPlatforms = new Set(["windows", "macos", "linux", "web"]);
 const allowedPricing = new Set(["free-open-source", "freeware"]);
 const platforms = new Set(["windows", "macos", "linux"]);
 const identifiers = new Set(["executableNames", "bundleNames", "desktopIds", "wingetIds", "homebrewCasks", "flatpakIds", "rpmNames"]);
@@ -56,3 +56,9 @@ for (const file of files) {
   }
 }
 console.log(`Validated ${files.length} catalog entries.`);
+
+const featured = JSON.parse(readFileSync(new URL("../catalog/collections/creative-top-50.json", import.meta.url), "utf8"));
+assert(featured.id === "creative-top-50", "Featured collection id must remain stable");
+assert(Array.isArray(featured.ids) && featured.ids.length === 50, "Creative Top 50 must contain exactly 50 apps");
+assert(new Set(featured.ids).size === 50, "Creative Top 50 must not include duplicates");
+for (const id of featured.ids) assert(ids.has(id), `Creative Top 50 references missing catalog app ${id}`);

@@ -1,0 +1,37 @@
+{
+  "id": "glaxnimate",
+  "name": "Glaxnimate",
+  "publisher": "Glaxnimate contributors",
+  "description": "Vector animation and Lottie authoring for interactive motion graphics.",
+  "categories": [
+    "animation",
+    "vector"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://glaxnimate.mattbas.org/",
+    "download": "https://glaxnimate.mattbas.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "glaxnimate.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Glaxnimate.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "glaxnimate"
+      ]
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "opentoonz",
+  "name": "OpenToonz",
+  "publisher": "OpenToonz project",
+  "description": "2D animation studio for traditional, digital and composited animation.",
+  "categories": [
+    "animation",
+    "digital-painting"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://opentoonz.github.io/e/",
+    "download": "https://opentoonz.github.io/e/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "opentoonz.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "OpenToonz.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "opentoonz"
+      ]
+    }
+  }
+}

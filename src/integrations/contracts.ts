@@ -1,4 +1,4 @@
-import type { CatalogApp, PackageManager, Platform } from "../types";
+import type { CatalogApp, PackageManager, NativePlatform } from "../types";
 
 /**
  * Native adapters live in Rust or tightly scoped native plugins.
@@ -12,7 +12,7 @@ export type DetectionConfidence = "exact-package-id" | "exact-bundle-id" | "name
 
 export interface InstalledMatch {
   appId: string;
-  platform: Platform;
+  platform: NativePlatform;
   source: DetectionSource;
   confidence: DetectionConfidence;
   sourceId: string;
@@ -44,7 +44,7 @@ export interface UpdateRequest {
 }
 
 export interface ScanAdapter {
-  readonly platform: Platform;
+  readonly platform: NativePlatform;
   /** Read-only discovery, with no app installation, update or code execution. */
   scan(catalog: readonly CatalogApp[]): Promise<readonly InstalledMatch[]>;
 }

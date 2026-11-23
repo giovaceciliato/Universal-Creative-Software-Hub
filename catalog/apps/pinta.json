@@ -1,0 +1,40 @@
+{
+  "id": "pinta",
+  "name": "Pinta",
+  "publisher": "Pinta project",
+  "description": "Lightweight bitmap drawing and photo editing with layers and simple effects.",
+  "categories": [
+    "image-editing",
+    "digital-painting"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.pinta-project.com/",
+    "download": "https://www.pinta-project.com/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "pinta.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Pinta.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "pinta"
+      ],
+      "rpmNames": [
+        "pinta"
+      ]
+    }
+  }
+}
