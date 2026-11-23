@@ -38,11 +38,12 @@ See [PLATFORMS.md](PLATFORMS.md) for planned packages and test criteria.
 See [UI_DESIGN.md](UI_DESIGN.md) and [DETECTION_AND_UPDATES.md](DETECTION_AND_UPDATES.md).
 
 ## Phase 2 — operating-system integrations
-- [ ] Installed-app detection (platform-specific)
+- [x] Initial read-only Installed scan for Blender and Krita on Windows/macOS/Fedora (broader catalog detection remains future work)
 - [ ] Verified installation sources/package manager adapters
 - [ ] Update availability reporting with accurate status labels
 - [ ] Optional user-approved updates where technically feasible
-- [ ] Portable application handling
+- [ ] Portable application handling (scanner does not yet detect arbitrary standalone AppImages)
+- [x] Direct vendor-file downloads with progress on supported architectures; no automatic installation
 
 ## Phase 3 — community store
 - [ ] Developer submission guide and review checklist

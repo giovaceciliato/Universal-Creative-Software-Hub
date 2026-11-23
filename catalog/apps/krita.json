@@ -28,11 +28,17 @@
     "windows": {
       "executableNames": [
         "krita.exe"
+      ],
+      "wingetIds": [
+        "KDE.Krita"
       ]
     },
     "macos": {
       "bundleNames": [
         "Krita.app"
+      ],
+      "homebrewCasks": [
+        "krita"
       ]
     },
     "linux": {

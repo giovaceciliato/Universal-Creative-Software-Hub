@@ -4,7 +4,7 @@
 
 Universal Creative Software Hub aims to make creative tools easier to discover, organize, launch, and keep up to date — from established applications like **Blender** and **Krita** to tools built by independent developers.
 
-> **Status:** Early project planning. The desktop application, automatic installation, and update management are **not implemented yet**.
+> **Status:** Alpha desktop application. Catalog discovery, local shortcuts, manual installed-app scanning, and publisher-file downloads are implemented in source. Automatic installation and third-party update management are **not** implemented.
 
 ## Vision
 
@@ -39,7 +39,7 @@ The catalog is stored in [`catalog/apps/`](catalog/apps/). Initially, entries li
 
 - Desktop shell: **Tauri + Rust**
 - Interface: **TypeScript + React**
-- Local preferences and library: **SQLite**
+- Local preferences and library: **localStorage** in the current prototype; SQLite is a possible later migration
 - Catalog: versioned JSON manifests, with community contributions through pull requests
 - Update/install adapters: platform-native package managers and publisher-supported channels, introduced incrementally
 
@@ -82,7 +82,7 @@ The hub's own source code is licensed under the [MIT License](LICENSE). Third-pa
 
 ## Try the early desktop prototype
 
-The first code prototype is being developed in `feat/desktop-mvp-shell`. It includes Discover, catalog search and filtering, locally saved favorites and shortcuts, and the native Tauri desktop shell. Updates and package installation are **not implemented**.
+The desktop prototype includes Discover, catalog search, local favorites and shortcuts, read-only app scanning, and native publisher-file downloads. Updates and package installation are **not implemented**.
 
 ```sh
 npm install
@@ -99,8 +99,27 @@ See [Development](docs/DEVELOPMENT.md) for requirements and current limitations.
 
 The next UI iteration uses a **white/black minimalist design**, recognizable local SVG marks for Blender and Krita, and clear separation between **saved software**, **installed software**, and **software updates**.
 
-The catalog also includes declarative per-platform identifiers for future native detection and updates. **An identifier is not proof of installation.** No scan is performed, and no updater is executed, until native adapters have been built and verified.
+The catalog also includes declarative per-platform identifiers for future native detection and updates. **An identifier is not proof of installation.** The scanner now executes only on request, using OS/package-manager information for the apps in our catalog. It never triggers updates or installation.
 
 - [UI design](docs/UI_DESIGN.md)
 - [Detection and updates architecture](docs/DETECTION_AND_UPDATES.md)
 - [Third-party icon credits](docs/ICONS.md)
+
+## Scan and download — early native implementation
+
+In the desktop app, click **Scan computer** under Discover or Installed. The read-only scanner currently recognizes catalog entries **Blender and Krita** via RPM/Flatpak/desktop entries and PATH on Fedora, Homebrew/application bundles on macOS, and WinGet/known locations on Windows. Name-only matches are explicitly marked unverified.
+
+The **Download** button saves an official publisher release file directly into the device's Downloads folder (one-click, with progress). This is a **download**, not an installation or upgrade. Files are not executed automatically. Known SHA-256 hashes are checked; Krita Linux AppImage requires manual signature verification because no SHA-256 hash is pinned yet.
+
+For supported platforms and file versions, see [Direct downloads and integrity](docs/DOWNLOADS.md). On unsupported architectures or in the browser preview, the app links to the official publisher download page instead.
+
+### Run the latest branch
+
+```sh
+git fetch origin
+git switch feat/native-scan-direct-download
+npm install
+npm run tauri dev
+```
+
+This code is still an alpha. Real scanning and download behavior must be tested on the host platform; GitHub CI checks compilation but cannot validate every existing installation or download mirror.

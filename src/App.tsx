@@ -1,18 +1,41 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { isTauri } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { open as chooseFile } from "@tauri-apps/plugin-dialog";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
-  ArrowUpRight, Check, CheckCircle2, Compass, ExternalLink,
+  ArrowDownToLine, ArrowUpRight, Check, CheckCircle2, Compass, ExternalLink,
   FolderOpen, Heart, Info, Library, Link2, Package, Plus, RefreshCw,
   Search, Settings2, Trash2, X,
 } from "lucide-react";
 import { catalog, categories, categoryLabel, localPlatform, validWebUrl } from "./catalog";
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
+import type { InstalledMatch } from "./integrations/contracts";
 
 type View = "discover" | "library" | "installed" | "updates";
 type ShortcutDraft = { name: string; kind: "url" | "path"; target: string };
 const emptyDraft: ShortcutDraft = { name: "", kind: "url", target: "" };
+interface ScanReport {
+  platform: string;
+  matches: InstalledMatch[];
+  checkedSources: string[];
+  warnings: string[];
+}
+interface DownloadOffer {
+  appId: string;
+  version: string;
+  fileName: string;
+  sizeBytes: number;
+  checksumAvailable: boolean;
+}
+interface DownloadResult {
+  fileName: string;
+  savedPath: string;
+  sha256: string;
+  checksumVerified: boolean;
+}
+interface DownloadProgress { appId: string; received: number; total: number; }
+
 const native = isTauri();
 const devicePlatform = localPlatform();
 const platforms: Record<Platform, string> = {
@@ -73,6 +96,33 @@ export default function App() {
   const [draft, setDraft] = useState<ShortcutDraft>(emptyDraft);
   const [formError, setFormError] = useState("");
   const [notification, setNotification] = useState("");
+  const [scanReport, setScanReport] = useState<ScanReport | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [downloadOffers, setDownloadOffers] = useState<DownloadOffer[]>([]);
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadPercent, setDownloadPercent] = useState<Record<string, number>>({});
+  const [completedDownloads, setCompletedDownloads] = useState<Record<string, DownloadResult>>({});
+
+  useEffect(() => {
+    if (!native) return;
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    void invoke<DownloadOffer[]>("available_downloads")
+      .then(offers => { if (!disposed) setDownloadOffers(offers); })
+      .catch(() => { if (!disposed) setDownloadOffers([]); });
+    void listen<DownloadProgress>("catalog-download-progress", event => {
+      if (!disposed && event.payload.total > 0) {
+        setDownloadPercent(current => ({
+          ...current,
+          [event.payload.appId]: Math.min(100, Math.floor(100 * event.payload.received / event.payload.total)),
+        }));
+      }
+    }).then(remove => {
+      if (disposed) remove();
+      else unlisten = remove;
+    }).catch(() => {});
+    return () => { disposed = true; unlisten?.(); };
+  }, []);
 
   const saved = catalog.filter(app => favorites.includes(app.id));
   const filtered = useMemo(() => catalog.filter(app => {
@@ -92,6 +142,66 @@ export default function App() {
       if (native) await openUrl(url);
       else window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) { setNotification(`Could not open link: ${String(error)}`); }
+  }
+
+  async function scanComputer() {
+    setView("installed");
+    if (!native) {
+      setNotification("A computer scan requires the native desktop application.");
+      return;
+    }
+    if (scanning) return;
+    setScanning(true);
+    setNotification("");
+    try {
+      const report = await invoke<ScanReport>("scan_installed_apps");
+      setScanReport(report);
+    } catch (error) {
+      setNotification(`Scan failed: ${String(error)}`);
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  async function directDownload(app: CatalogApp) {
+    const offer = downloadOffers.find(item => item.appId === app.id);
+    if (!native || !offer) {
+      await openWebsite(app.links.download);
+      return;
+    }
+    if (downloading) return;
+    setDownloading(app.id);
+    setDownloadPercent(current => ({...current, [app.id]: 0}));
+    setNotification("");
+    try {
+      const result = await invoke<DownloadResult>("download_app", { appId: app.id });
+      setCompletedDownloads(current => ({...current, [app.id]: result}));
+      setNotification(`${app.name} downloaded to ${result.savedPath}. ${result.checksumVerified ? "SHA-256 verified." : "Checksum not verified; review the publisher signature before running."} The installer was not executed.`);
+    } catch (error) {
+      setNotification(`Download failed: ${String(error)}. Use the official publisher page if needed.`);
+    } finally {
+      setDownloading(null);
+    }
+  }
+
+  function DownloadButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
+    const offer = downloadOffers.find(item => item.appId === app.id);
+    const active = downloading === app.id;
+    const done = completedDownloads[app.id];
+    const label = active ? `Downloading ${downloadPercent[app.id] ?? 0}%`
+      : done ? "Downloaded"
+      : offer ? `Download ${small ? "" : offer.version}`.trim()
+      : "Official page";
+    return <button
+      type="button"
+      className="outline-button"
+      disabled={Boolean(downloading)}
+      aria-label={`${label} ${app.name}`}
+      title={offer ? `Save ${offer.fileName} to your Downloads folder (${Math.round(offer.sizeBytes / 1024 / 1024)} MiB)` : "Open official publisher downloads"}
+      onClick={() => { void directDownload(app); }}
+    >
+      {label} {offer ? <ArrowDownToLine size={small ? 15 : 16} /> : <ArrowUpRight size={small ? 15 : 16} />}
+    </button>;
   }
 
   async function openShortcut(shortcut: CustomShortcut) {
@@ -182,6 +292,12 @@ export default function App() {
               <h1>Tools for making things.</h1>
               <p className="subheading">A curated collection of free creative software. No noise, just tools.</p>
             </header>
+            <div className="toolbar-actions">
+              <button className="outline-button" type="button" onClick={() => { void scanComputer(); }} disabled={scanning}>
+                <RefreshCw size={16} className={scanning ? "spin" : ""} />
+                {scanning ? "Scanning..." : "Scan computer"}
+              </button>
+            </div>
             <div className="controls">
               <label className="search"><Search size={19} aria-hidden="true"/><input aria-label="Search software" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search software, categories, publishers" /></label>
               <label className="platform-filter"><Settings2 size={17}/><select aria-label="Operating system" value={platform} onChange={e => setPlatform(e.target.value as Platform | "all")}>
@@ -199,7 +315,7 @@ export default function App() {
                 <article className="software-row" key={app.id}>
                   <AppIcon app={app} size="lg" />
                   <div className="software-info">
-                    <div className="software-title"><h3>{app.name}</h3><span className="free-label">FREE</span></div>
+                    <div className="software-title"><h3>{app.name}</h3><span className="free-label">FREE</span>{scanReport?.matches.some(match => match.appId === app.id) && <span className="detected-label">DETECTED</span>}</div>
                     <p className="publisher">{app.publisher} <span className="separator">/</span> {app.pricingModel === "free-open-source" ? "Open source" : "Freeware"}</p>
                     <p className="description">{app.description}</p>
                     <div className="software-categories">{app.categories.slice(0, 3).map(cat => <span key={cat}>{categoryLabel(cat)}</span>)}</div>
@@ -208,13 +324,13 @@ export default function App() {
                     <button className="icon-action" type="button" title={favorites.includes(app.id) ? "Remove from library" : "Save to library"} aria-label={favorites.includes(app.id) ? `Remove ${app.name} from library` : `Save ${app.name} to library`} aria-pressed={favorites.includes(app.id)} onClick={() => favorite(app.id)}>
                       <Heart size={19} fill={favorites.includes(app.id) ? "currentColor" : "none"}/>
                     </button>
-                    <button type="button" className="outline-button" onClick={() => openWebsite(app.links.download)}>Get app <ArrowUpRight size={16}/></button>
+                    <DownloadButton app={app} />
                   </div>
                 </article>
               ))}
               {filtered.length === 0 && <div className="empty"><Search size={26}/><h3>Nothing found</h3><p>Try another search or choose a different category.</p><button type="button" className="outline-button" onClick={() => {setQuery("");setCategory("all");setPlatform("all");}}>Reset filters</button></div>}
             </div>
-            <div className="footnote"><Info size={15}/><span>Official publisher download links only. Installation and update automation are not active.</span></div>
+            <div className="footnote"><Info size={15}/><span>Native downloads save publisher files to Downloads without running them. Software installation and updates are not automated.</span></div>
           </>
         )}
 
@@ -223,7 +339,7 @@ export default function App() {
             <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved software and shortcuts, all in one place.</p></div><button className="black-button" type="button" onClick={() => setAdding(true)}><Plus size={17}/> Add shortcut</button></header>
             {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover, or add a local executable or web link.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
             {saved.length > 0 && <section className="library-section"><div className="list-heading"><h2>Saved from Discover</h2><span>{saved.length}</span></div><div className="software-list">
-              {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Publisher page only</small></div><button type="button" className="outline-button" onClick={() => openWebsite(app.links.download)}>Publisher <ArrowUpRight size={15}/></button><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
+              {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Saved from catalog</small></div><DownloadButton app={app} small /><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
             </div></section>}
             {shortcuts.length > 0 && <section className="library-section"><div className="list-heading"><h2>Custom shortcuts</h2><span>{shortcuts.length}</span></div><div className="software-list">
               {shortcuts.map(item => <article className="compact-row" key={item.id}><span className="shortcut-icon">{item.kind === "url" ? <Link2 size={23}/> : <FolderOpen size={23}/>}</span><div className="compact-info"><strong>{item.name}</strong><small title={item.target}>{item.target}</small></div><button type="button" className="outline-button" onClick={() => openShortcut(item)}>{item.kind === "url" ? "Open link" : "Open file"} <ExternalLink size={15}/></button><button type="button" className="icon-action" title="Remove shortcut" aria-label={`Remove ${item.name}`} onClick={() => setShortcuts(xs => xs.filter(x => x.id !== item.id))}><Trash2 size={17}/></button></article>)}
@@ -234,8 +350,43 @@ export default function App() {
 
         {view === "installed" && (
           <>
-            <header className="page-header"><p className="eyebrow">YOUR COMPUTER</p><h1>Installed software.</h1><p className="subheading">One place to see the creative tools already on your machine.</p></header>
-            <div className="feature-empty"><div className="feature-symbol"><Package size={32} strokeWidth={1.3}/></div><p className="eyebrow">DETECTION ENGINE / NEXT MILESTONE</p><h2>Device scanning is not active yet.</h2><p>The platform-specific detection contracts and known app identifiers are being defined. No computer scan has been performed and no installed status is inferred from saved bookmarks.</p><span className="line-chip">Windows · macOS · Fedora</span></div>
+            <header className="page-header page-header-inline">
+              <div><p className="eyebrow">YOUR COMPUTER</p><h1>Installed software.</h1><p className="subheading">Check this device for apps supported by the catalog.</p></div>
+              <button className="black-button" type="button" disabled={scanning} onClick={() => { void scanComputer(); }}>
+                <RefreshCw size={16} className={scanning ? "spin" : ""} />{scanning ? "Scanning..." : "Scan computer"}
+              </button>
+            </header>
+            {!native && <div className="feature-empty"><div className="feature-symbol"><Package size={32} strokeWidth={1.3}/></div><h2>Desktop app required</h2><p>Scanning installed programs is not available in the browser preview. Open the app with Tauri on Windows, macOS, or Fedora.</p></div>}
+            {native && !scanReport && !scanning && <div className="feature-empty">
+              <div className="feature-symbol"><Package size={32} strokeWidth={1.3}/></div>
+              <h2>Ready to scan</h2>
+              <p>The scan checks local package managers, known application paths and desktop entries for Blender and Krita. It is read-only, stays on this device, and does not contact a server.</p>
+              <button className="outline-button scan-center-button" type="button" onClick={() => { void scanComputer(); }}>Scan computer <RefreshCw size={16}/></button>
+            </div>}
+            {native && scanning && <div className="feature-empty" role="status"><RefreshCw size={32} className="spin"/><h2>Checking installed applications...</h2><p>Reading local app locations and available package managers. Nothing is changed.</p></div>}
+            {native && scanReport && !scanning && <>
+              <div className="scan-summary"><CheckCircle2 size={17}/><span>Scan complete · {new Set(scanReport.matches.map(match => match.appId)).size} catalog apps detected · {scanReport.matches.length} installation sources</span></div>
+              <div className="list-heading"><h2>Detected apps</h2><span>{scanReport.checkedSources.join(" · ")}</span></div>
+              <div className="software-list">
+                {catalog.filter(app => scanReport.matches.some(m => m.appId === app.id)).map(app => (
+                  <article className="compact-row" key={app.id}>
+                    <AppIcon app={app}/>
+                    <div className="compact-info">
+                      <strong>{app.name}</strong>
+                      {scanReport.matches.filter(m => m.appId === app.id).map(match =>
+                        <small key={match.source + match.sourceId}>
+                          {match.source} · {match.installedVersion ? `version ${match.installedVersion}` : "version unknown"}
+                          {match.confidence === "name-only" ? " · filename match (not verified)" : " · exact package match"}
+                        </small>)}
+                    </div>
+                    <DownloadButton app={app} small />
+                  </article>
+                ))}
+                {scanReport.matches.length === 0 && <div className="empty"><Search size={27}/><h3>No catalog apps detected</h3><p>This scan currently recognizes Blender and Krita through supported sources. Portable apps outside known paths may not appear.</p></div>}
+              </div>
+              {scanReport.warnings.length > 0 && <div className="scan-warning">{scanReport.warnings.map(x => <p key={x}>{x}</p>)}</div>}
+              <div className="footnote"><Info size={15}/><span>A file or shortcut match does not guarantee that an app works. Updates are not yet managed here. Results are not uploaded.</span></div>
+            </>}
           </>
         )}
 

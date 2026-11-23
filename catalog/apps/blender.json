@@ -28,11 +28,17 @@
     "windows": {
       "executableNames": [
         "blender.exe"
+      ],
+      "wingetIds": [
+        "BlenderFoundation.Blender"
       ]
     },
     "macos": {
       "bundleNames": [
         "Blender.app"
+      ],
+      "homebrewCasks": [
+        "blender"
       ]
     },
     "linux": {

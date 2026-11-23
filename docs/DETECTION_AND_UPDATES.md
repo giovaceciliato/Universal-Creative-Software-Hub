@@ -1,6 +1,6 @@
 # Application detection and update architecture
 
-**Status: definitions and interfaces only.** No device scan, update-checking service, or automatic software update is executed by this change.
+**Status: initial native read-only scanner implemented** for Blender and Krita. Running a scan requires an explicit click. App update checking and update execution remain unimplemented. The downloader is separate and never runs downloaded files.
 
 ## 1. Sources of truth
 
@@ -17,12 +17,12 @@ The app's TypeScript contracts are in `src/integrations/contracts.ts`, with a pu
 
 ## 2. Scanner lifecycle
 
-1. User opens **Installed** and explicitly chooses **Scan** (future functionality).
-2. The Tauri/Rust backend identifies the operating system and enumerates relevant **read-only** sources.
+1. User opens **Installed** or Discover and explicitly chooses **Scan computer**.
+2. The Tauri/Rust backend executes its allowlisted `scan_installed_apps` command and checks platform-specific local sources without a network request.
 3. Normalize findings to `InstalledMatch`, linking matched sources to catalog IDs.
 4. Report the source, provenance, confidence, optional observed version, and optional launch target.
 5. Present ambiguous name-only matches as **Unverified** until user confirmation, never as an exact installed match.
-6. Cache results locally for a short, explicit interval and provide a manual rescan.
+6. Keep results in memory for the active session and provide a manual rescan. No persistent device inventory is collected.
 7. Treat absent sources, timeouts and missing permissions as **Unknown**, not `Not installed`.
 
 Do not scan private user document directories or transmit a device software inventory to a server. This feature should run locally by default. Only expose **allowlisted** Rust commands to the webview. Collect diagnostics or telemetry only with explicit opt-in.
@@ -31,7 +31,7 @@ Do not scan private user document directories or transmit a device software inve
 
 | Platform | Read-only detection sources | Update sources to investigate |
 | --- | --- | --- |
-| Windows | WinGet package list, uninstall registry entries, known executable paths | WinGet for exact publisher-verified package IDs; vendor updater otherwise |
+| Windows | WinGet exact-ID listing (if available), known program folders and PATH. Registry scanning is not implemented. | WinGet for exact publisher-verified package IDs; vendor updater otherwise |
 | macOS | /Applications and ~/Applications bundles, optional Homebrew casks | Homebrew cask where it is the actual installation channel; otherwise vendor update channel |
 | Fedora | RPM database / DNF package list, Flatpak installations, desktop entries | DNF for RPM installations; Flatpak for Flatpak installations; publisher flow otherwise |
 
@@ -64,11 +64,11 @@ Version comparison is provider-specific. Never guess an update from a GitHub tag
 
 - [x] Shared app manifest fields and JSON Schema
 - [x] Read-only TypeScript contracts and hint planning helper
-- [ ] Native Rust `scan_installed_apps` IPC with OS adapters
+- [x] Native Rust `scan_installed_apps` IPC for curated apps (initial Fedora, Windows, macOS adapters)
 - [ ] Tests against WinGet, Homebrew, DNF and Flatpak fixture data
-- [ ] Verified installed-app status in UI
+- [x] Scan results shown in Installed UI, with exact-package vs name-only confidence labels
 - [ ] Native `check_updates` IPC, with per-provider state reporting
 - [ ] User-confirmed `update_app` IPC with allowlisting and package origin checks
 - [ ] Signed public package releases after platform testing
 
-The Installed and Updates screens currently describe these limitations rather than fabricating scan results.
+The Installed screen now reports actual scanner findings and source confidence; the Updates screen remains an honest placeholder. See [DOWNLOADS.md](DOWNLOADS.md) for separately implemented direct file downloads.
