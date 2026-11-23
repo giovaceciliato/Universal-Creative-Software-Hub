@@ -66,8 +66,8 @@ fn run_read_only(program: &str, args: &[&str]) -> Option<String> {
 }
 
 fn entries() -> Result<Vec<CatalogEntry>, String> {
-    const BLENDER: &str = include_str!("../../../catalog/apps/blender.json");
-    const KRITA: &str = include_str!("../../../catalog/apps/krita.json");
+    const BLENDER: &str = include_str!("../../catalog/apps/blender.json");
+    const KRITA: &str = include_str!("../../catalog/apps/krita.json");
     [BLENDER, KRITA]
         .iter()
         .map(|data| serde_json::from_str(data).map_err(|e| format!("Invalid catalog manifest: {e}")))
