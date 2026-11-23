@@ -71,3 +71,15 @@ History is stored in localStorage on this machine and can be cleared. A
 transfer still active when the app closes is marked interrupted on restart.
 True background transfer, cancellation, resume and delta updates are future
 features.
+
+## User-added GitHub release files
+
+The Downloads tab now also receives **explicitly selected GitHub release
+asset jobs**, showing queued/downloading/completed states, progress,
+selected release tag, file location and integrity message.
+
+The native backend constrains all GitHub asset downloads to public
+repositories and the latest stable release, checks size and SHA-256 when
+GitHub provides a digest, and never executes the saved file. The watched
+repository records the last release downloaded **without changing the
+manually reported installed version**.

@@ -101,3 +101,17 @@ A user can find Blender or Krita, open its official download page, add a locally
 - [ ] Add direct, checksum-verified publisher downloads where offered
 - [ ] Verify portability and installation paths on all three desktop OSs
 - [ ] Implement genuine update feeds and verified installed-vs-available versions
+
+## GitHub project tracking + ArtCraft Suite
+
+- [x] Add a dedicated ArtCraft Suite filter, including verified signed-catalog additions
+- [x] Accept public GitHub project URLs and persist tracked repositories locally
+- [x] Check the latest stable GitHub release on demand / first opening Updates
+- [x] Show latest release vs last downloaded vs manually recorded installed version
+- [x] Choose supported GitHub release files and download with progress
+- [x] Verify GitHub-provided SHA-256 digest if present; otherwise report unverified
+- [x] Keep downloaded GitHub files completely separate from OS-authorized installers
+- [ ] GitHub authenticated rate-limit support / private repositories
+- [ ] Checks for latest non-stable/prerelease GitHub channels
+- [ ] Package-manager aware upgrades for user-tracked apps
+- [ ] True download pause/resume and cancellation

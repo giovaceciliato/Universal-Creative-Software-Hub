@@ -11,6 +11,7 @@ import {
 import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } from "./catalog";
 import featured50 from "../catalog/collections/creative-top-50.json";
 import { loadTransferHistory, saveTransferHistory, formatBytes, transferCounts, type TransferTask } from "./downloadActivity";
+import { loadGithubProjects, saveGithubProjects, githubReleaseStatus, type GitHubProjectInfo, type GitHubRelease, type GitHubAsset, type WatchedGitHubProject } from "./githubTracking";
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
 import type { InstalledMatch } from "./integrations/contracts";
 
@@ -110,6 +111,14 @@ const nav: { key: View; label: string; icon: typeof Compass }[] = [
 
 export default function App() {
   const [view, setView] = useState<View>("discover");
+  const [githubProjects, setGithubProjects] = useState<WatchedGitHubProject[]>(loadGithubProjects);
+  const [addingGithub, setAddingGithub] = useState(false);
+  const [githubDraftUrl, setGithubDraftUrl] = useState("");
+  const [githubError, setGithubError] = useState("");
+  const [githubBusy, setGithubBusy] = useState(false);
+  const [githubRefreshing, setGithubRefreshing] = useState(false);
+  const [selectedGithubAssets, setSelectedGithubAssets] = useState<Record<string, number>>({});
+  const githubRefreshStarted = useRef(false);
   const [installableIds, setInstallableIds] = useState<Set<string>>(nativeInstallIds);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -152,6 +161,7 @@ export default function App() {
     let disposed = false;
     let unlisten: (() => void) | undefined;
     let unlistenInstall: (() => void) | undefined;
+    let unlistenGithub: (() => void) | undefined;
     void invoke<DownloadOffer[]>("available_downloads")
       .then(offers => { if (!disposed) setDownloadOffers(offers); })
       .catch(() => { if (!disposed) setDownloadOffers([]); });
@@ -166,6 +176,15 @@ export default function App() {
     }).then(remove => {
       if (disposed) remove();
       else unlisten = remove;
+    }).catch(() => {});
+    void listen<{repo: string; received: number; total: number}>("github-download-progress", event => {
+      const id = activeDownloadId.current;
+      if (id && !disposed) setTransfers(xs => xs.map(x => x.id === id && x.githubRepo === event.payload.repo ? {
+        ...x, received: event.payload.received, total: event.payload.total,
+        status: "downloading" as const,
+      } : x));
+    }).then(remove => {
+      if (disposed) remove(); else unlistenGithub = remove;
     }).catch(() => {});
     void listen<InstallProgress>("creative-install-progress", event => {
       const taskId = activeInstallId.current;
@@ -182,10 +201,11 @@ export default function App() {
       if (disposed) remove();
       else unlistenInstall = remove;
     }).catch(() => {});
-    return () => { disposed = true; unlisten?.(); unlistenInstall?.(); };
+    return () => { disposed = true; unlisten?.(); unlistenInstall?.(); unlistenGithub?.(); };
   }, []);
 
   useEffect(() => { saveTransferHistory(transfers); }, [transfers]);
+  useEffect(() => { saveGithubProjects(githubProjects); }, [githubProjects]);
 
   const catalog = useMemo<CatalogApp[]>(() => {
     if (!signedApps) return bundledCatalog;
@@ -224,14 +244,22 @@ export default function App() {
       m.appId === t.appId && m.installedVersion,
     )?.installedVersion,
   })));
+  const artcraftIds = useMemo(() => new Set([
+    ...bundledCatalog.filter(app => app.publisher === "ArtCraft Team" || app.id === "solidcraft" || app.id === "mailcraft").map(app => app.id),
+    ...(signedApps?.map(app => app.id) ?? []),
+  ]), [signedApps]);
+  const watchedReleaseCount = githubProjects.filter(p => !p.checkError &&
+    (githubReleaseStatus(p) === "new-since-download" ||
+     githubReleaseStatus(p) === "different-from-recorded")).length;
   const saved = catalog.filter(app => favorites.includes(app.id));
   const filtered = useMemo(() => catalog.filter(app => {
     const q = query.trim().toLowerCase();
-    return (category === "all" || (category === "top-50" ? featuredSoftwareIds.has(app.id) : app.categories.includes(category))) &&
+    return (category === "all" || (category === "top-50" ? featuredSoftwareIds.has(app.id) :
+      category === "artcraft-suite" ? artcraftIds.has(app.id) : app.categories.includes(category))) &&
       (platform === "all" || app.platforms.includes(platform)) &&
       (!q || [app.name, app.publisher, app.description, ...app.categories]
         .some(value => value.toLowerCase().includes(q)));
-  }), [query, category, platform, catalog]);
+  }), [query, category, platform, catalog, artcraftIds]);
 
   async function refreshArtcraft() {
     if (!native) { setCatalogStatus("offline"); return; }
@@ -255,6 +283,79 @@ export default function App() {
 
   const favorite = (id: string) => setFavorites(current =>
     current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
+
+  async function addGithubProject(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (githubBusy) return;
+    if (!native) { setGithubError("Use the native desktop app to verify GitHub repositories."); return; }
+    if (githubProjects.length >= 25) {
+      setGithubError("A maximum of 25 GitHub projects can be tracked to respect API rate limits.");
+      return;
+    }
+    const url = githubDraftUrl.trim();
+    setGithubError("");
+    setGithubBusy(true);
+    try {
+      const info = await invoke<GitHubProjectInfo>("inspect_github_project", { url });
+      const existing = githubProjects.find(p => p.repo.toLowerCase() === info.repo.toLowerCase());
+      if (existing) {
+        setGithubError("This repository is already in your tracked projects.");
+        return;
+      }
+      setGithubProjects(current => [{
+        ...info, checkedAt: Date.now(),
+      }, ...current].slice(0, 25));
+      setAddingGithub(false);
+      setGithubDraftUrl("");
+      setView("updates");
+      githubRefreshStarted.current = true; // The new project's first release was just checked.
+    } catch (error) {
+      setGithubError(String(error));
+    } finally { setGithubBusy(false); }
+  }
+
+  async function refreshGithubProjects() {
+    if (!native || githubRefreshing || githubProjects.length === 0) return;
+    setGithubRefreshing(true);
+    for (const project of githubProjects) {
+      try {
+        const latest = await invoke<GitHubRelease | null>("check_github_release", { repo: project.repo });
+        setGithubProjects(current => current.map(item => item.repo === project.repo
+          ? { ...item, latest, checkedAt: Date.now(), checkError: undefined }
+          : item));
+      } catch (error) {
+        setGithubProjects(current => current.map(item => item.repo === project.repo
+          ? { ...item, checkError: String(error) }
+          : item));
+      }
+    }
+    setGithubRefreshing(false);
+  }
+
+  useEffect(() => {
+    if (view !== "updates" || !native || githubProjects.length === 0 || githubRefreshStarted.current) return;
+    githubRefreshStarted.current = true;
+    void refreshGithubProjects();
+  }, [view, githubProjects.length]);
+
+  function queueGithubAsset(project: WatchedGitHubProject, asset: GitHubAsset) {
+    if (!native || !project.latest) return;
+    const tag = project.latest.tag;
+    if (transfers.some(t => t.githubRepo === project.repo && t.kind === "download" &&
+      (t.status === "queued" || t.status === "downloading"))) {
+      setView("downloads");
+      return;
+    }
+    setTransfers(current => [{
+      id: crypto.randomUUID(), appId: `github:${project.repo}`,
+      appName: project.name, kind: "download" as const,
+      githubRepo: project.repo, githubAssetId: asset.id,
+      targetVersion: tag, installedVersion: project.installedTag || undefined,
+      status: "queued" as const, received: 0, total: asset.sizeBytes,
+      createdAt: Date.now(),
+    }, ...current].slice(0, 100));
+    setView("downloads");
+  }
 
   async function openWebsite(url: string) {
     if (!validWebUrl(url)) { setNotification("Only HTTP(S) links are supported."); return; }
@@ -420,15 +521,21 @@ export default function App() {
     downloadWorker.current = true;
     activeDownloadId.current = next.id;
     setTransfers(xs => xs.map(x => x.id === next.id ? { ...x, status: "downloading" as const } : x));
-    void invoke<DownloadResult>("download_app", { appId: next.appId })
-      .then(result => {
-        setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
+    const promise = next.githubRepo && next.githubAssetId !== undefined
+      ? invoke<DownloadResult>("download_github_asset", {
+          repo: next.githubRepo, assetId: next.githubAssetId, expectedTag: next.targetVersion,
+        })
+      : invoke<DownloadResult>("download_app", { appId: next.appId });
+    void promise.then(result => {
+        if (!next.githubRepo) setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
+        if (next.githubRepo) setGithubProjects(xs => xs.map(p => p.repo === next.githubRepo
+          ? { ...p, downloadedTag: next.targetVersion } : p));
         setTransfers(xs => xs.map(x => x.id === next.id ? {
           ...x, status: "completed" as const, received: x.total,
           filePath: result.savedPath,
           message: result.checksumVerified
-            ? "SHA-256 verified. Package saved; installation not started."
-            : "Downloaded without a verified SHA-256. Review the publisher's signature.",
+            ? "SHA-256 matched the publisher's release metadata. Downloaded, not installed."
+            : "Downloaded only; no trusted SHA-256 digest was supplied. Verify provenance before opening.",
         } : x));
       })
       .catch(error => {
@@ -484,7 +591,7 @@ export default function App() {
     setView("library");
   }
 
-  const count = shortcuts.length + saved.length;
+  const count = shortcuts.length + saved.length + githubProjects.length;
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -499,6 +606,7 @@ export default function App() {
               <Icon size={18} strokeWidth={1.7} />
               <span>{label}</span>
               {key === "library" && count > 0 && <span className="nav-count">{count}</span>}
+              {key === "updates" && watchedReleaseCount > 0 && <span className="nav-count">{watchedReleaseCount}</span>}
               {key === "downloads" && (activeTransfers.active + activeTransfers.queued) > 0 &&
                 <span className="nav-count">{activeTransfers.active + activeTransfers.queued}</span>}
             </button>
@@ -562,6 +670,7 @@ export default function App() {
             <div className="category-tabs" role="group" aria-label="Categories">
               <button type="button" className={category === "all" ? "category-tab active" : "category-tab"} onClick={() => setCategory("all")}>All software</button>
               <button type="button" className={category === "top-50" ? "category-tab active" : "category-tab"} onClick={() => setCategory("top-50")}>Creative Top 50</button>
+              <button type="button" className={category === "artcraft-suite" ? "category-tab active" : "category-tab"} onClick={() => setCategory("artcraft-suite")}>ArtCraft Suite ({artcraftIds.size})</button>
               {categories.map(item => <button key={item} type="button" className={category === item ? "category-tab active" : "category-tab"} onClick={() => setCategory(item)}>{categoryLabel(item)}</button>)}
             </div>
             <div className="list-heading"><h2>Explore</h2><span>{filtered.length} {filtered.length === 1 ? "app" : "apps"}</span></div>
@@ -592,11 +701,28 @@ export default function App() {
 
         {view === "library" && (
           <>
-            <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved software and shortcuts, all in one place.</p></div><button className="black-button" type="button" onClick={() => setAdding(true)}><Plus size={17}/> Add shortcut</button></header>
-            {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover, or add a local executable or web link.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
+            <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved software, GitHub projects and shortcuts.</p></div>
+              <div className="github-header-actions">
+                <button className="outline-button" type="button" onClick={() => setAddingGithub(true)}><Plus size={17}/> Add GitHub project</button>
+                <button className="black-button" type="button" onClick={() => setAdding(true)}><Plus size={17}/> Add shortcut</button>
+              </div></header>
+            {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover, add a GitHub repository or add a shortcut.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
             {saved.length > 0 && <section className="library-section"><div className="list-heading"><h2>Saved from Discover</h2><span>{saved.length}</span></div><div className="software-list">
               {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Saved from catalog</small></div><InstallButton app={app} small /><DownloadButton app={app} small /><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
             </div></section>}
+            {githubProjects.length > 0 && <section className="library-section">
+              <div className="list-heading"><h2>GitHub projects</h2><span>{githubProjects.length} tracked</span></div>
+              <div className="software-list">
+                {githubProjects.map(project => <article className="compact-row" key={project.repo}>
+                  <span className="shortcut-icon"><Link2 size={23}/></span>
+                  <div className="compact-info"><strong>{project.name}</strong>
+                    <small>{project.repo} · Latest: {project.latest?.tag ?? "No stable release"}</small></div>
+                  <button type="button" className="outline-button" onClick={() => setView("updates")}>Releases <RefreshCw size={15}/></button>
+                  <button type="button" className="icon-action" title="Stop tracking" aria-label={`Stop tracking ${project.name}`}
+                    onClick={() => setGithubProjects(xs => xs.filter(p => p.repo !== project.repo))}><Trash2 size={17}/></button>
+                </article>)}
+              </div>
+            </section>}
             {shortcuts.length > 0 && <section className="library-section"><div className="list-heading"><h2>Custom shortcuts</h2><span>{shortcuts.length}</span></div><div className="software-list">
               {shortcuts.map(item => <article className="compact-row" key={item.id}><span className="shortcut-icon">{item.kind === "url" ? <Link2 size={23}/> : <FolderOpen size={23}/>}</span><div className="compact-info"><strong>{item.name}</strong><small title={item.target}>{item.target}</small></div><button type="button" className="outline-button" onClick={() => openShortcut(item)}>{item.kind === "url" ? "Open link" : "Open file"} <ExternalLink size={15}/></button><button type="button" className="icon-action" title="Remove shortcut" aria-label={`Remove ${item.name}`} onClick={() => setShortcuts(xs => xs.filter(x => x.id !== item.id))}><Trash2 size={17}/></button></article>)}
             </div></section>}
@@ -737,8 +863,99 @@ export default function App() {
 
         {view === "updates" && (
           <>
-            <header className="page-header"><p className="eyebrow">MAINTENANCE</p><h1>Software updates.</h1><p className="subheading">Keep the tools you use up to date, safely.</p></header>
-            <div className="feature-empty"><div className="feature-symbol"><RefreshCw size={31} strokeWidth={1.3}/></div><p className="eyebrow">UPDATE ADAPTERS / NEXT MILESTONE</p><h2>Update management is not active yet.</h2><p>Future integrations will use verified package managers and publisher-supported update channels. The hub will not execute commands supplied by an app catalog entry.</p><span className="line-chip">WinGet · Homebrew · DNF · Flatpak</span></div>
+            <header className="page-header page-header-inline">
+              <div><p className="eyebrow">RELEASE TRACKER</p><h1>Updates.</h1>
+                <p className="subheading">Track the latest published GitHub releases for projects you follow.</p>
+              </div>
+              <div className="github-header-actions">
+                <button type="button" className="outline-button" disabled={!native || githubRefreshing || githubProjects.length === 0}
+                  onClick={() => { void refreshGithubProjects(); }}>
+                  <RefreshCw size={16} className={githubRefreshing ? "spin" : ""}/> {githubRefreshing ? "Checking..." : "Check releases"}
+                </button>
+                <button type="button" className="black-button" onClick={() => setAddingGithub(true)}>
+                  <Plus size={16}/> Add GitHub project
+                </button>
+              </div>
+            </header>
+            <div className="github-update-summary">
+              <div><strong>{githubProjects.length}</strong><span>Tracked projects</span></div>
+              <div><strong>{watchedReleaseCount}</strong><span>Release differences</span></div>
+              <div><strong>{githubProjects.filter(p => Boolean(p.checkError)).length}</strong><span>Check errors</span></div>
+            </div>
+            <div className="transfer-explanation"><Info size={16}/>
+              <span>A new GitHub release means a package is available to inspect. It does not prove the software on your computer is outdated.
+                The installed version is recorded only when you enter it. Downloads never install or execute files.</span>
+            </div>
+            {githubProjects.length === 0 && <div className="feature-empty">
+              <div className="feature-symbol"><Link2 size={31} strokeWidth={1.3}/></div>
+              <h2>Follow a GitHub project</h2>
+              <p>Paste a public repository URL to see stable releases, download the publisher's assets and check when a newer release is published.</p>
+              <button type="button" className="outline-button scan-center-button" onClick={() => setAddingGithub(true)}>
+                Add GitHub project <Plus size={15}/>
+              </button>
+            </div>}
+            {githubProjects.length > 0 && <div className="github-project-list">
+              {githubProjects.map(project => {
+                const release = project.latest;
+                const status = githubReleaseStatus(project);
+                const assetId = selectedGithubAssets[project.repo] ?? release?.assets[0]?.id;
+                const selectedAsset = release?.assets.find(a => a.id === assetId);
+                const downloadingAsset = transfers.some(t => t.githubRepo === project.repo &&
+                  (t.status === "queued" || t.status === "downloading"));
+                const statusText = project.checkError ? "Check failed" :
+                  status === "new-since-download" ? "New release since download" :
+                  status === "different-from-recorded" ? "Different from recorded version" :
+                  status === "same" ? "Release matches recorded version" :
+                  status === "no-release" ? "No stable release" : "Version not yet recorded";
+                return <article className="github-project-card" key={project.repo}>
+                  <div className="github-project-head">
+                    <div>
+                      <div className="github-project-name"><h2>{project.name}</h2><span className="github-status">{statusText}</span></div>
+                      <p className="github-repo-name">{project.repo}</p>
+                      {project.description && <p className="github-project-description">{project.description}</p>}
+                    </div>
+                    <button type="button" className="icon-action" aria-label={`Stop tracking ${project.name}`}
+                      title="Stop tracking" onClick={() => setGithubProjects(xs => xs.filter(p => p.repo !== project.repo))}>
+                      <Trash2 size={17}/>
+                    </button>
+                  </div>
+                  <div className="github-versions">
+                    <div><span>Latest stable GitHub release</span><strong>{release?.tag ?? "Not available"}</strong></div>
+                    <div><span>Last downloaded here</span><strong>{project.downloadedTag ?? "No download"}</strong></div>
+                    <div><label htmlFor={`github-installed-${project.repo.replace(/[^A-Za-z0-9]/g, "-")}`}>Installed version (manual)</label>
+                      <input id={`github-installed-${project.repo.replace(/[^A-Za-z0-9]/g, "-")}`} maxLength={100}
+                        value={project.installedTag ?? ""} placeholder="e.g. v1.2.3"
+                        onChange={e => { const version = e.target.value;
+                          setGithubProjects(xs => xs.map(p => p.repo === project.repo ? {...p, installedTag: version} : p));
+                        }}/>
+                    </div>
+                  </div>
+                  {project.checkError && <p className="github-error" role="alert">{project.checkError}. Previous release data may be stale.</p>}
+                  {release && <div className="github-assets">
+                    <label htmlFor={`github-asset-${project.repo.replace(/[^A-Za-z0-9]/g, "-")}`}>Release package</label>
+                    {release.assets.length > 0 ? <div className="github-asset-controls">
+                      <select id={`github-asset-${project.repo.replace(/[^A-Za-z0-9]/g, "-")}`}
+                        value={assetId} onChange={e => setSelectedGithubAssets(v => ({ ...v, [project.repo]: Number(e.target.value) }))}>
+                        {release.assets.map(asset => <option value={asset.id} key={asset.id}>
+                          {asset.name} · {formatBytes(asset.sizeBytes)}{asset.sha256Available ? " · SHA-256" : ""}
+                        </option>)}
+                      </select>
+                      <button type="button" className="black-button" disabled={!native || !selectedAsset || downloadingAsset || Boolean(project.checkError)}
+                        onClick={() => selectedAsset && queueGithubAsset(project, selectedAsset)}>
+                        <ArrowDownToLine size={16}/>{downloadingAsset ? "Queued" : "Download file"}
+                      </button>
+                    </div> : <p className="github-project-description">No supported binary or archive files found in this release. See the publisher's release page.</p>}
+                    <small>Package download only; no automatic installation. A publisher checksum is checked only when provided by GitHub.</small>
+                  </div>}
+                  <div className="github-project-footer">
+                    <button type="button" className="outline-button" onClick={() => { void openWebsite(project.url); }}>Repository <ExternalLink size={14}/></button>
+                    {release && <button type="button" className="outline-button" onClick={() => { void openWebsite(release.url); }}>Release notes <ArrowUpRight size={14}/></button>}
+                    {project.checkedAt && <span>Checked {new Date(project.checkedAt).toLocaleString()}</span>}
+                  </div>
+                </article>;
+              })}
+            </div>}
+            <div className="footnote"><Info size={15}/><span>GitHub release tracking is available now. Automatic updates for software installed through DNF, WinGet, Homebrew or other package managers still require dedicated integration.</span></div>
           </>
         )}
       </main>
@@ -777,6 +994,32 @@ export default function App() {
               <ArrowDownToLine size={16}/>
             </button>
           </div>
+        </div>
+      </div>}
+
+      {addingGithub && <div className="modal-backdrop" role="presentation"
+        onMouseDown={e => { if(e.currentTarget === e.target && !githubBusy) {setAddingGithub(false);setGithubError("");} }}>
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="github-add-title">
+          <header><div><p className="eyebrow">GITHUB PROJECT</p><h2 id="github-add-title">Track a repository</h2></div>
+            <button type="button" className="icon-action" disabled={githubBusy} aria-label="Close"
+              onClick={() => {setAddingGithub(false);setGithubError("");}}><X size={19}/></button></header>
+          <form onSubmit={e => { void addGithubProject(e); }}>
+            <label className="form-label">GitHub repository URL
+              <input autoFocus type="url" required value={githubDraftUrl}
+                placeholder="https://github.com/owner/repository"
+                onChange={e => setGithubDraftUrl(e.target.value)}/>
+            </label>
+            <p className="form-help">Public GitHub repositories only. Their stable releases are checked when you open Updates or press Check releases. Nothing will be installed automatically.</p>
+            {!native && <p className="form-error">Use the native desktop app to read releases and download files.</p>}
+            {githubError && <p className="form-error" role="alert">{githubError}</p>}
+            <div className="modal-actions">
+              <button type="button" className="outline-button" disabled={githubBusy}
+                onClick={() => {setAddingGithub(false);setGithubError("");}}>Cancel</button>
+              <button type="submit" className="black-button" disabled={!native || githubBusy || githubDraftUrl.trim().length === 0}>
+                <Plus size={16}/>{githubBusy ? "Checking GitHub..." : "Add and track"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>}
 

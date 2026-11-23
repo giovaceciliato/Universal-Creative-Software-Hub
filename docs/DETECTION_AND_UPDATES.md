@@ -90,3 +90,20 @@ candidate; a successful RPM query is an **exact-package-id** match.
 
 The scanner may miss app stores, manually unpacked archives or portable
 applications. It does not automatically run or update applications.
+
+## User-tracked GitHub release monitoring
+
+The **Updates** page now supports explicit tracking of public GitHub
+repositories. GitHub's latest stable release is a **release information
+source**, not proof that a newer version is installed or available through
+the user's actual OS package manager. The launcher shows the latest
+published release, the last release file downloaded through Creative Hub,
+and an optional installed version manually entered by the user.
+
+Release tags are compared for equality only; ordering is not inferred from
+tag formats. A differing tag is labeled **release differs** or **new
+release since download**, never silently marked as a verified OS update.
+
+Release assets can be downloaded safely into Downloads but are never
+executed or automatically installed. The existing WinGet, DNF, Flatpak and
+Homebrew native updater work remains separate.

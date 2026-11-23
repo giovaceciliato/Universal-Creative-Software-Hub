@@ -95,3 +95,16 @@ of going through OS package managers.
 The native scanner bundles all local catalog JSON files as read-only
 matching metadata. The Rust installer has a separate allowlist for 23
 verified Fedora RPM names; a manifest cannot change the allowlist.
+
+## Tracked GitHub releases
+
+The Tauri module `src-tauri/src/github_projects.rs` implements three
+commands: `inspect_github_project`, `check_github_release` and
+`download_github_asset`. The React tracker persists up to 25 public
+repositories in `ucsh:github-projects:v1`. GitHub downloads are queued
+alongside curated downloads through the existing transfer history.
+
+Run the Rust unit tests to validate URL and asset-path checks, followed
+by frontend/catalog CI and native Fedora/Windows/macOS builds. Do not
+represent a downloaded package as installed or a differing GitHub tag
+as a verified software update.
