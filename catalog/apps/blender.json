@@ -1,0 +1,22 @@
+{
+  "id": "blender",
+  "name": "Blender",
+  "publisher": "Blender Foundation",
+  "description": "Free and open-source software for 3D modeling, animation, rendering, and related creative workflows.",
+  "categories": [
+    "3d",
+    "animation",
+    "rendering"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.blender.org/",
+    "download": "https://www.blender.org/download/",
+    "sourceCode": "https://projects.blender.org/blender/blender"
+  }
+}

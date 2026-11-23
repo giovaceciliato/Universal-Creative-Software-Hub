@@ -1,0 +1,22 @@
+{
+  "id": "krita",
+  "name": "Krita",
+  "publisher": "Krita Foundation",
+  "description": "Free and open-source digital painting software for illustration, concept art, and animation.",
+  "categories": [
+    "digital-painting",
+    "illustration",
+    "animation"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://krita.org/",
+    "download": "https://krita.org/en/download/",
+    "sourceCode": "https://invent.kde.org/graphics/krita"
+  }
+}
