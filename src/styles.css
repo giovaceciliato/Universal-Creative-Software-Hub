@@ -154,3 +154,13 @@ h3 { font-size: 18px; letter-spacing: -.035em; }
   .compact-row { flex-wrap: wrap; }
   .compact-row .outline-button { margin-left: auto; }
 }
+
+.toolbar-actions { display:flex; justify-content:flex-end; margin: -12px 0 14px; }
+.scan-center-button { margin-top:26px; }
+.scan-summary { display:flex; align-items:center; gap:10px; padding:15px 17px; background:#f6f6f6; border:1px solid #e5e5e5; font-size:12px; color:#333; }
+.detected-label { border:1px solid #999; padding:4px 7px; font-size:9px; font-weight:700; letter-spacing:.06em; }
+.scan-warning { border-left:2px solid #333; padding:6px 14px; margin-top:20px; background:#fafafa; color:#555; font-size:12px; }
+.scan-warning p { margin:8px 0; }
+@keyframes spin { to {transform:rotate(360deg);} }
+.spin { animation:spin 1s linear infinite; }
+@media(max-width:640px){.toolbar-actions{margin:0 0 18px;}.page-header-inline{align-items:stretch;}.software-title{flex-wrap:wrap;} }

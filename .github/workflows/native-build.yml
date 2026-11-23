@@ -2,9 +2,7 @@ name: Native desktop build checks
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feat/desktop-mvp-shell
+  pull_request:
 
 permissions:
   contents: read
@@ -28,6 +26,10 @@ jobs:
           workspaces: './src-tauri -> target'
       - name: Install dependencies
         run: npm install
+      - name: Generate Tauri icon assets
+        run: npm run pretauri
+      - name: Run Rust unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
       - name: Build native app
         run: npm run tauri build
         env:
@@ -50,6 +52,10 @@ jobs:
           dnf install -y nodejs npm rust cargo gcc gcc-c++ make git             webkit2gtk4.1-devel openssl-devel curl wget file             libappindicator-gtk3-devel librsvg2-devel libxdo-devel             rpm-build pkgconf-pkg-config patchelf
       - name: Install dependencies
         run: npm install
+      - name: Generate Tauri icon assets
+        run: npm run pretauri
+      - name: Run Rust unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
       - name: Build RPM
         run: npm run tauri build
       - uses: actions/upload-artifact@v4

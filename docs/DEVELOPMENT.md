@@ -22,7 +22,7 @@ npm run validate:catalog
 npm run dev
 ```
 
-Open the shown local Vite URL. The preview supports browsing, searching, favorites, and saving website shortcuts; **opening local executables is intentionally disabled outside of the Tauri desktop application.**
+Open the shown local Vite URL. The preview supports browsing, searching, favorites, and saving website shortcuts; **scanning, native direct downloads, and opening local executables are intentionally unavailable outside of the Tauri desktop application.**
 
 ## Run the desktop shell
 
@@ -31,7 +31,7 @@ npm install
 npm run tauri dev
 ```
 
-The desktop app supports file selection and user-initiated opening through Tauri's official dialog/opener plugins. The outcome for `.desktop`, `.app` bundles, and executable formats may differ by OS; do not treat successful file selection as verified launching until tested.
+The desktop app supports manual read-only app detection, publisher-file downloads, file selection, and user-initiated opening through Tauri's native commands and official dialog/opener plugins. The outcome for `.desktop`, `.app` bundles, and executable formats may differ by OS; do not treat successful file selection as verified launching until tested.
 
 ## Build
 
@@ -53,7 +53,8 @@ The `tauri.*.conf.json` files configure Windows NSIS, macOS DMG, and Linux RPM a
 
 - Catalog currently has Blender and Krita; download buttons lead to publishers' official pages.
 - Saved catalog entries are bookmarks, not proof that the apps are installed.
-- No installed-app detection, account sync, self-updater, or automatic package installation.
+- A read-only scanner now checks Blender and Krita through platform-specific local package metadata and known paths. Other programs are not yet recognized; source and confidence are shown.
+- Publisher-file direct downloads are available on supported architectures, with progress and checksum validation where pinned; no downloaded file is executed.
 - User library currently uses localStorage, not SQLite; migration to an application database may follow.
 - Native builds and installers must be tested on each target OS before being called released.
 - This initial app icon is a temporary neutral geometric placeholder until branding is chosen.
