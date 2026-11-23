@@ -86,6 +86,8 @@ fn entries() -> Result<Vec<CatalogEntry>, String> {
         include_str!("../../catalog/apps/cadcraft.json"),
         include_str!("../../catalog/apps/gridcraft.json"),
         include_str!("../../catalog/apps/craft-anything.json"),
+        include_str!("../../catalog/apps/solidcraft.json"),
+        include_str!("../../catalog/apps/mailcraft.json"),
     ]
         .iter()
         .map(|data| serde_json::from_str(data).map_err(|e| format!("Invalid catalog manifest: {e}")))
@@ -311,7 +313,7 @@ mod tests {
     #[test]
     fn manifests_are_loadable() {
         let manifests = entries().unwrap();
-        assert_eq!(manifests.len(), 19);
+        assert_eq!(manifests.len(), 21);
         assert!(manifests.iter().any(|app| app.id == "blender"));
         assert!(manifests.iter().any(|app| app.id == "krita"));
         assert!(manifests.iter().any(|app| app.id == "anicraft"));

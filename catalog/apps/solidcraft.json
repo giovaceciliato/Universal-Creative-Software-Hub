@@ -1,0 +1,49 @@
+{
+  "id": "solidcraft",
+  "name": "SolidCraft",
+  "publisher": "Tangency Labs",
+  "description": "Parametric 3D CAD for sketches, solids and editable feature timelines.",
+  "categories": [
+    "3d",
+    "cad"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/solidcraft.png",
+    "source": "ArtCraft Launcher project icon, upstream craft-launcher",
+    "license": "MIT OR Apache-2.0"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "solidcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "SolidCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "solidcraft"
+      ],
+      "flatpakIds": [
+        "io.tangencylabs.solidcraft"
+      ],
+      "rpmNames": [
+        "solidcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://solidcraft.io",
+    "download": "https://github.com/tangency-labs/solidcraft/releases/latest",
+    "sourceCode": "https://github.com/tangency-labs/solidcraft"
+  }
+}

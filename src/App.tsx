@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as chooseFile } from "@tauri-apps/plugin-dialog";
@@ -8,11 +8,14 @@ import {
   FolderOpen, Heart, Info, Library, Link2, Package, Plus, RefreshCw,
   Search, Settings2, Trash2, X,
 } from "lucide-react";
-import { catalog, categories, categoryLabel, localPlatform, validWebUrl } from "./catalog";
+import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } from "./catalog";
+import { loadTransferHistory, saveTransferHistory, formatBytes, transferCounts, type TransferTask } from "./downloadActivity";
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
 import type { InstalledMatch } from "./integrations/contracts";
 
-type View = "discover" | "library" | "installed" | "updates";
+type View = "discover" | "library" | "installed" | "updates" | "downloads";
+interface SignedCraftApp { id: string; name: string; tagline: string; publisher: string; repo: string; kind: "official" | "community"; }
+interface SignedCraftCatalog { apps: SignedCraftApp[]; rejected: number; source: string; }
 type ShortcutDraft = { name: string; kind: "url" | "path"; target: string };
 const emptyDraft: ShortcutDraft = { name: "", kind: "url", target: "" };
 interface ScanReport {
@@ -49,6 +52,11 @@ interface InstallOutcome { appId: string; status: "installed" | "manual-step"; m
 interface InstallProgress { appId: string; received: number; total: number; }
 
 const native = isTauri();
+const nativeInstallIds = new Set(
+  bundledCatalog.filter(app =>
+    app.id === "blender" || app.id === "krita" || app.publisher === "ArtCraft Team",
+  ).map(app => app.id),
+);
 const devicePlatform = localPlatform();
 const platforms: Record<Platform, string> = {
   windows: "Windows", macos: "macOS", linux: "Fedora / Linux",
@@ -94,6 +102,7 @@ const nav: { key: View; label: string; icon: typeof Compass }[] = [
   { key: "discover", label: "Discover", icon: Compass },
   { key: "library", label: "My Library", icon: Library },
   { key: "installed", label: "Installed", icon: CheckCircle2 },
+  { key: "downloads", label: "Downloads", icon: ArrowDownToLine },
   { key: "updates", label: "Updates", icon: RefreshCw },
 ];
 
@@ -111,9 +120,15 @@ export default function App() {
   const [scanReport, setScanReport] = useState<ScanReport | null>(null);
   const [scanning, setScanning] = useState(false);
   const [downloadOffers, setDownloadOffers] = useState<DownloadOffer[]>([]);
-  const [downloading, setDownloading] = useState<string | null>(null);
-  const [downloadPercent, setDownloadPercent] = useState<Record<string, number>>({});
   const [completedDownloads, setCompletedDownloads] = useState<Record<string, DownloadResult>>({});
+  const [transfers, setTransfers] = useState<TransferTask[]>(loadTransferHistory);
+  const downloadWorker = useRef(false);
+  const activeDownloadId = useRef<string | null>(null);
+  const activeInstallId = useRef<string | null>(null);
+  const catalogRefreshStarted = useRef(false);
+  const [signedApps, setSignedApps] = useState<SignedCraftApp[] | null>(null);
+  const [catalogStatus, setCatalogStatus] = useState<"loading" | "verified" | "offline">("offline");
+  const [catalogError, setCatalogError] = useState("");
   const [installPlan, setInstallPlan] = useState<InstallPlan | null>(null);
   const [checkingInstall, setCheckingInstall] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -129,17 +144,25 @@ export default function App() {
       .then(offers => { if (!disposed) setDownloadOffers(offers); })
       .catch(() => { if (!disposed) setDownloadOffers([]); });
     void listen<DownloadProgress>("catalog-download-progress", event => {
-      if (!disposed && event.payload.total > 0) {
-        setDownloadPercent(current => ({
-          ...current,
-          [event.payload.appId]: Math.min(100, Math.floor(100 * event.payload.received / event.payload.total)),
-        }));
+      const taskId = activeDownloadId.current;
+      if (taskId && !disposed) {
+        setTransfers(xs => xs.map(x => x.id === taskId ? {
+          ...x, received: event.payload.received, total: event.payload.total,
+          status: "downloading" as const,
+        } : x));
       }
     }).then(remove => {
       if (disposed) remove();
       else unlisten = remove;
     }).catch(() => {});
     void listen<InstallProgress>("creative-install-progress", event => {
+      const taskId = activeInstallId.current;
+      if (taskId && !disposed) {
+        setTransfers(xs => xs.map(x => x.id === taskId ? {
+          ...x, received: event.payload.received, total: event.payload.total,
+          status: "installing" as const,
+        } : x));
+      }
       if (!disposed && event.payload.total > 0) {
         setInstallProgress(Math.min(100, Math.round(100 * event.payload.received / event.payload.total)));
       }
@@ -150,6 +173,45 @@ export default function App() {
     return () => { disposed = true; unlisten?.(); unlistenInstall?.(); };
   }, []);
 
+  useEffect(() => { saveTransferHistory(transfers); }, [transfers]);
+
+  const catalog = useMemo<CatalogApp[]>(() => {
+    if (!signedApps) return bundledCatalog;
+    const merged = new Map(bundledCatalog.map(app => [app.id, app]));
+    for (const item of signedApps) {
+      const existing = merged.get(item.id);
+      if (existing) {
+        // Signed metadata cannot rewrite the publisher/repository identity of a bundled app.
+        if (existing.links.sourceCode === `https://github.com/${item.repo}`) {
+          merged.set(item.id, { ...existing, description: item.tagline || existing.description });
+        }
+        continue;
+      }
+      // A signed catalog addition is a listing only, NEVER a native installation allowlist entry.
+      merged.set(item.id, {
+        id: item.id, name: item.name, publisher: item.publisher,
+        description: item.tagline || "ArtCraft Launcher catalog application",
+        categories: ["creative-tools"],
+        platforms: ["windows", "macos", "linux"],
+        pricingModel: "free-open-source",
+        links: {
+          website: item.kind === "official"
+            ? `https://getartcraft.com/apps/${item.id}`
+            : `https://github.com/${item.repo}`,
+          download: `https://github.com/${item.repo}/releases/latest`,
+          sourceCode: `https://github.com/${item.repo}`,
+        },
+      });
+    }
+    return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [signedApps]);
+  const categories = useMemo(() => [...new Set(catalog.flatMap(app => app.categories))].sort(), [catalog]);
+  const activeTransfers = transferCounts(transfers.map(t => ({
+    ...t,
+    installedVersion: t.installedVersion ?? scanReport?.matches.find(m =>
+      m.appId === t.appId && m.installedVersion,
+    )?.installedVersion,
+  })));
   const saved = catalog.filter(app => favorites.includes(app.id));
   const filtered = useMemo(() => catalog.filter(app => {
     const q = query.trim().toLowerCase();
@@ -157,7 +219,27 @@ export default function App() {
       (platform === "all" || app.platforms.includes(platform)) &&
       (!q || [app.name, app.publisher, app.description, ...app.categories]
         .some(value => value.toLowerCase().includes(q)));
-  }), [query, category, platform]);
+  }), [query, category, platform, catalog]);
+
+  async function refreshArtcraft() {
+    if (!native) { setCatalogStatus("offline"); return; }
+    setCatalogStatus("loading");
+    setCatalogError("");
+    try {
+      const result = await invoke<SignedCraftCatalog>("refresh_artcraft_catalog");
+      setSignedApps(result.apps);
+      setCatalogStatus("verified");
+    } catch (error) {
+      setCatalogStatus("offline");
+      setCatalogError(String(error));
+    }
+  }
+
+  useEffect(() => {
+    if (!native || catalogRefreshStarted.current) return;
+    catalogRefreshStarted.current = true;
+    void refreshArtcraft();
+  }, []);
 
   const favorite = (id: string) => setFavorites(current =>
     current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
@@ -170,8 +252,8 @@ export default function App() {
     } catch (error) { setNotification(`Could not open link: ${String(error)}`); }
   }
 
-  async function scanComputer() {
-    setView("installed");
+  async function scanComputer(stayOnPage = false) {
+    if (!stayOnPage) setView("installed");
     if (!native) {
       setNotification("A computer scan requires the native desktop application.");
       return;
@@ -210,32 +292,61 @@ export default function App() {
 
   async function confirmInstallation() {
     if (!installPlan || installing) return;
+    if (downloadWorker.current) {
+      setInstallError("Finish the current download before starting an OS installation.");
+      return;
+    }
+    const plan = installPlan;
+    const taskId = crypto.randomUUID();
+    const task: TransferTask = {
+      id: taskId, appId: plan.appId,
+      appName: catalog.find(a => a.id === plan.appId)?.name ?? plan.appId,
+      kind: "installation", targetVersion: plan.version,
+      installedVersion: scanReport?.matches.find(m => m.appId === plan.appId && m.installedVersion)?.installedVersion,
+      status: "installing", received: 0, total: plan.sizeBytes ?? 0,
+      createdAt: Date.now(),
+    };
+    setTransfers(xs => [task, ...xs].slice(0, 100));
+    activeInstallId.current = taskId;
     setInstalling(true);
     setInstallError("");
     setInstallProgress(null);
     try {
       const result = await invoke<InstallOutcome>("install_app", {
-        appId: installPlan.appId,
-        expectedVersion: installPlan.version,
+        appId: plan.appId,
+        expectedVersion: plan.version,
       });
-      setNotification(`${catalog.find(a => a.id === result.appId)?.name ?? result.appId}: ${result.message}`);
+      setTransfers(xs => xs.map(x => x.id === taskId ? {
+        ...x, status: result.status === "installed" ? "completed" as const : "manual" as const,
+        received: x.total, message: result.message,
+      } : x));
+      setNotification(`${task.appName}: ${result.message}`);
       setInstallPlan(null);
       if (result.status === "installed") {
         try {
           const report = await invoke<ScanReport>("scan_installed_apps");
           setScanReport(report);
         } catch {
-          // A completed OS installer is not the same thing as scan verification.
+          // The command succeeded, but installation detection remains unconfirmed.
         }
       }
     } catch (error) {
+      setTransfers(xs => xs.map(x => x.id === taskId ? {
+        ...x, status: "failed" as const, message: String(error),
+      } : x));
       setInstallError(String(error));
     } finally {
+      activeInstallId.current = null;
       setInstalling(false);
     }
   }
 
   function InstallButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
+    if (!nativeInstallIds.has(app.id)) {
+      return <button type="button" className="outline-button" onClick={() => { void openWebsite(app.links.download); }}>
+        Publisher page <ArrowUpRight size={15}/>
+      </button>;
+    }
     const installed = scanReport?.matches.some(match =>
       match.appId === app.id && match.confidence === "exact-package-id",
     ) ?? false;
@@ -257,33 +368,35 @@ export default function App() {
       await openWebsite(app.links.download);
       return;
     }
-    if (downloading) return;
-    setDownloading(app.id);
-    setDownloadPercent(current => ({...current, [app.id]: 0}));
-    setNotification("");
-    try {
-      const result = await invoke<DownloadResult>("download_app", { appId: app.id });
-      setCompletedDownloads(current => ({...current, [app.id]: result}));
-      setNotification(`${app.name} downloaded to ${result.savedPath}. ${result.checksumVerified ? "SHA-256 verified." : "Checksum not verified; review the publisher signature before running."} The installer was not executed.`);
-    } catch (error) {
-      setNotification(`Download failed: ${String(error)}. Use the official publisher page if needed.`);
-    } finally {
-      setDownloading(null);
+    if (transfers.some(t => t.appId === app.id && t.kind === "download" &&
+      (t.status === "queued" || t.status === "downloading"))) {
+      setView("downloads");
+      return;
     }
+    setTransfers(xs => [{
+      id: crypto.randomUUID(), appId: app.id, appName: app.name,
+      kind: "download" as const, targetVersion: offer.version,
+      installedVersion: scanReport?.matches.find(m => m.appId === app.id && m.installedVersion)?.installedVersion,
+      status: "queued" as const, received: 0, total: offer.sizeBytes, createdAt: Date.now(),
+    }, ...xs].slice(0, 100));
+    setView("downloads");
   }
 
   function DownloadButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
     const offer = downloadOffers.find(item => item.appId === app.id);
-    const active = downloading === app.id;
+    const job = transfers.find(t => t.appId === app.id && t.kind === "download" &&
+      (t.status === "queued" || t.status === "downloading"));
     const done = completedDownloads[app.id];
-    const label = active ? `Downloading ${downloadPercent[app.id] ?? 0}%`
+    const label = job?.status === "downloading"
+      ? `Downloading ${Math.min(100, Math.round(100 * job.received / Math.max(1, job.total)))}%`
+      : job?.status === "queued" ? "Queued"
       : done ? "Downloaded"
       : offer ? `Download ${small ? "" : offer.version}`.trim()
       : "Official page";
     return <button
       type="button"
       className="outline-button"
-      disabled={Boolean(downloading) || Boolean(done)}
+      disabled={Boolean(job)}
       aria-label={`${label} ${app.name}`}
       title={offer ? `Save ${offer.fileName} to your Downloads folder (${Math.round(offer.sizeBytes / 1024 / 1024)} MiB)` : "Open official publisher downloads"}
       onClick={() => { void directDownload(app); }}
@@ -291,6 +404,35 @@ export default function App() {
       {label} {offer ? <ArrowDownToLine size={small ? 15 : 16} /> : <ArrowUpRight size={small ? 15 : 16} />}
     </button>;
   }
+
+  useEffect(() => {
+    if (!native || downloadWorker.current || installing) return;
+    const next = transfers.find(t => t.kind === "download" && t.status === "queued");
+    if (!next) return;
+    downloadWorker.current = true;
+    activeDownloadId.current = next.id;
+    setTransfers(xs => xs.map(x => x.id === next.id ? { ...x, status: "downloading" as const } : x));
+    void invoke<DownloadResult>("download_app", { appId: next.appId })
+      .then(result => {
+        setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
+        setTransfers(xs => xs.map(x => x.id === next.id ? {
+          ...x, status: "completed" as const, received: x.total,
+          filePath: result.savedPath,
+          message: result.checksumVerified
+            ? "SHA-256 verified. Package saved; installation not started."
+            : "Downloaded without a verified SHA-256. Review the publisher's signature.",
+        } : x));
+      })
+      .catch(error => {
+        setTransfers(xs => xs.map(x => x.id === next.id ? {
+          ...x, status: "failed" as const, message: String(error),
+        } : x));
+      })
+      .finally(() => {
+        activeDownloadId.current = null;
+        downloadWorker.current = false;
+      });
+  }, [transfers, installing]);
 
   async function openShortcut(shortcut: CustomShortcut) {
     if (shortcut.kind === "url") { await openWebsite(shortcut.target); return; }
@@ -349,6 +491,8 @@ export default function App() {
               <Icon size={18} strokeWidth={1.7} />
               <span>{label}</span>
               {key === "library" && count > 0 && <span className="nav-count">{count}</span>}
+              {key === "downloads" && (activeTransfers.active + activeTransfers.queued) > 0 &&
+                <span className="nav-count">{activeTransfers.active + activeTransfers.queued}</span>}
             </button>
           ))}
         </nav>
@@ -380,6 +524,20 @@ export default function App() {
               <h1>Tools for making things.</h1>
               <p className="subheading">A curated collection of free creative software. No noise, just tools.</p>
             </header>
+            <div className="catalog-sync-strip">
+              <div>
+                <strong>ArtCraft suite</strong>
+                <span>{catalogStatus === "verified"
+                  ? `Signed catalog verified · ${signedApps?.length ?? 0} entries`
+                  : catalogStatus === "loading" ? "Checking the official signed catalog..."
+                  : "Bundled catalog · 19 ArtCraft entries"}</span>
+                {catalogError && <small title={catalogError}>Online catalog unavailable; using local entries.</small>}
+              </div>
+              <button type="button" className="outline-button" disabled={!native || catalogStatus === "loading"}
+                onClick={() => { void refreshArtcraft(); }}>
+                <RefreshCw size={15} className={catalogStatus === "loading" ? "spin" : ""}/> Refresh ArtCraft
+              </button>
+            </div>
             <div className="toolbar-actions">
               <button className="outline-button" type="button" onClick={() => { void scanComputer(); }} disabled={scanning}>
                 <RefreshCw size={16} className={scanning ? "spin" : ""} />
@@ -419,7 +577,7 @@ export default function App() {
               ))}
               {filtered.length === 0 && <div className="empty"><Search size={26}/><h3>Nothing found</h3><p>Try another search or choose a different category.</p><button type="button" className="outline-button" onClick={() => {setQuery("");setCategory("all");setPlatform("all");}}>Reset filters</button></div>}
             </div>
-            <div className="footnote"><Info size={15}/><span>Install is performed only after confirmation using your OS installer or package manager. Some systems request administrator approval. Downloads remain available separately.</span></div>
+            <div className="footnote"><Info size={15}/><span>System installations require explicit confirmation and OS authorization where needed. Downloads and installations are visible in the Downloads section.</span></div>
           </>
         )}
 
@@ -476,6 +634,95 @@ export default function App() {
               {scanReport.warnings.length > 0 && <div className="scan-warning">{scanReport.warnings.map(x => <p key={x}>{x}</p>)}</div>}
               <div className="footnote"><Info size={15}/><span>A file or shortcut match does not guarantee that an app works. Updates are not yet managed here. Results are not uploaded.</span></div>
             </>}
+          </>
+        )}
+
+        {view === "downloads" && (
+          <>
+            <header className="page-header page-header-inline">
+              <div>
+                <p className="eyebrow">TRANSFER ACTIVITY</p>
+                <h1>Downloads.</h1>
+                <p className="subheading">Queued packages, active transfers and installation history.</p>
+              </div>
+              <div className="downloads-head-actions">
+                <button type="button" className="outline-button" disabled={!native || scanning}
+                  onClick={() => { void scanComputer(true); }}>
+                  <RefreshCw size={15} className={scanning ? "spin" : ""}/>
+                  {scanning ? "Scanning..." : "Scan installed versions"}
+                </button>
+                <button type="button" className="outline-button"
+                  disabled={!transfers.some(t => ["completed", "manual", "failed", "interrupted"].includes(t.status))}
+                  onClick={() => setTransfers(xs => xs.filter(t =>
+                    !["completed", "manual", "failed", "interrupted"].includes(t.status)))}>
+                  <Trash2 size={16}/> Clear finished
+                </button>
+              </div>
+            </header>
+            <div className="transfer-summary" aria-label="Download counts">
+              <div><strong>{activeTransfers.active}</strong><span>Active</span></div>
+              <div><strong>{activeTransfers.queued}</strong><span>Queued</span></div>
+              <div><strong>{activeTransfers.completed}</strong><span>Finished</span></div>
+              <div><strong>{activeTransfers.versionChanges}</strong><span>Different-version tasks</span></div>
+            </div>
+            <div className="transfer-explanation"><Info size={16}/>
+              <span>Versions are taken from the selected package and, if you have scanned this computer, the detected installed package. Different versions do not necessarily mean an upgrade. Software update checks are not implemented yet.</span>
+            </div>
+            {transfers.length === 0 ? (
+              <div className="feature-empty">
+                <div className="feature-symbol"><ArrowDownToLine size={30}/></div>
+                <h2>No downloads yet</h2>
+                <p>Choose Download or Install from Discover. Active progress and completed activity will appear here.</p>
+                <button type="button" className="outline-button scan-center-button" onClick={() => setView("discover")}>Browse software <ArrowUpRight size={15}/></button>
+              </div>
+            ) : (
+              <div className="transfer-list">
+                {transfers.map(task => {
+                  const app = catalog.find(item => item.id === task.appId);
+                  const hasProgress = task.total > 0;
+                  const percent = hasProgress ? Math.min(100, Math.round(100 * task.received / task.total)) : 0;
+                  const active = task.status === "downloading" || task.status === "installing";
+                  const statusLabel: Record<TransferTask["status"], string> = {
+                    queued: "Waiting in queue", downloading: "Downloading",
+                    installing: hasProgress && percent >= 100 ? "Waiting for OS installer" : "Installing / downloading",
+                    completed: task.kind === "download" ? "Downloaded" : "Install command completed",
+                    manual: "Finish installation manually", failed: "Failed", interrupted: "Previous session interrupted",
+                  };
+                  return <article className="transfer-row" key={task.id}>
+                    {app ? <AppIcon app={app} /> : <div className="shortcut-icon"><Package size={23}/></div>}
+                    <div className="transfer-body">
+                      <div className="transfer-row-head">
+                        <div><strong>{task.appName}</strong><span>{task.kind === "installation" ? "Install package" : "Download package"}</span></div>
+                        <span className="transfer-status">{statusLabel[task.status]}</span>
+                      </div>
+                      <div className="transfer-versions">
+                        <span>Installed: <strong>{task.installedVersion ?? scanReport?.matches.find(m =>
+                          m.appId === task.appId && m.installedVersion,
+                        )?.installedVersion ?? "Unknown / not scanned"}</strong></span>
+                        <span>Selected: <strong>{task.targetVersion === "repository" ? "System repository" : task.targetVersion}</strong></span>
+                      </div>
+                      {hasProgress && (active || task.status === "queued") &&
+                        <div className="transfer-meter">
+                          <div className="transfer-meter-track" role="progressbar"
+                            aria-label={`${task.appName} transfer progress`} aria-valuemin={0} aria-valuemax={100}
+                            aria-valuenow={percent}>
+                            <span style={{width: `${percent}%`}}/>
+                          </div>
+                          <small>{formatBytes(task.received)} / {formatBytes(task.total)} · {percent}%</small>
+                        </div>}
+                      {active && !hasProgress && <div className="transfer-indeterminate" role="status">System package manager is running. An administrator prompt may appear.</div>}
+                      {task.filePath && <p className="transfer-detail" title={task.filePath}>Saved to: {task.filePath}</p>}
+                      {task.message && <p className="transfer-detail">{task.message}</p>}
+                      {task.status === "failed" && app && <button type="button" className="outline-button transfer-retry"
+                        onClick={() => { void (task.kind === "download" ? directDownload(app) : requestInstallation(app)); }}>
+                        Retry <RefreshCw size={14}/>
+                      </button>}
+                    </div>
+                  </article>;
+                })}
+              </div>
+            )}
+            <p className="footnote"><Info size={15}/> Finished tasks remain in local history until cleared. Active transfers do not continue after the launcher is closed.</p>
           </>
         )}
 

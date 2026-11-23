@@ -1,0 +1,49 @@
+{
+  "id": "mailcraft",
+  "name": "MailCraft",
+  "publisher": "UCS Care Group",
+  "description": "Open-source mail, calendar, contacts and tasks in one desktop app.",
+  "categories": [
+    "productivity",
+    "communication"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/mailcraft.png",
+    "source": "ArtCraft Launcher project icon, upstream craft-launcher",
+    "license": "MIT OR Apache-2.0"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "mailcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "MailCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "mailcraft"
+      ],
+      "flatpakIds": [
+        "io.github.billsecond.mailcraft"
+      ],
+      "rpmNames": [
+        "mailcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://mailcraft.work",
+    "download": "https://github.com/UCS-Care-Group/mailcraft/releases/latest",
+    "sourceCode": "https://github.com/UCS-Care-Group/mailcraft"
+  }
+}

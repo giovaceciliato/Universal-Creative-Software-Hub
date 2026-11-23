@@ -126,9 +126,9 @@ This code is still an alpha. Real scanning and download behavior must be tested 
 
 ## Install software and ArtCraft suite
 
-The catalog includes **17 ArtCraft Crafting Apps** from the official
+The catalog includes **19 ArtCraft Launcher applications** (17 official and 2 community) from the official
 [ArtCraft Team](https://getartcraft.com/apps), with their original app icons.
-ArtCraft Studio is a separate product and is not included.
+ArtCraft Studio is separate and is not included in the currently signed Craft app catalog.
 
 Click **Install app** to review the release, provider and expected authorization
 prompt before proceeding. Windows uses WinGet or MSI; Fedora uses DNF and
@@ -149,3 +149,29 @@ git switch --track origin/feat/native-install-artcraft-suite
 npm install
 npm run tauri dev
 ```
+
+## Downloads dashboard and signed ArtCraft synchronization
+
+The **Downloads** tab now shows queued downloads, live progress, completed and
+failed transfers, and installation tasks. Each task shows the package version
+selected and, if a prior scan found it, the currently installed version.
+Transfer history is stored **locally** (up to 100 entries); interrupted tasks
+are marked as such on restart. Files are not installed automatically from a
+download task; **Install app** still requests explicit confirmation.
+
+The **ArtCraft suite** uses the official **Ed25519-signed hosted catalog**
+from `https://getartcraft.com/launcher-catalog.toml`, with signature at
+`https://getartcraft.com/launcher-catalog.toml.sig`. The backend verifies
+the exact upstream bytes against the official launcher's pinned public key.
+The app checks on startup and on **Refresh ArtCraft**, and falls back to the
+bundled entries offline. The signed catalog currently includes **SolidCraft**
+(Tangency Labs) and **MailCraft** (UCS Care Group), which are bundled locally
+with their original icons and credits.
+
+New signed-catalog entries can appear in Discover without a Creative Hub
+release. They are **listing-only** until a reviewed native installer adapter
+is added; signed catalog data does not authorize execution of new programs.
+No automatic software update check is claimed by the version-change counter.
+
+See [Downloads activity](docs/DOWNLOADS.md) and
+[Signed ArtCraft sync](docs/ARTCRAFT_SYNC.md).

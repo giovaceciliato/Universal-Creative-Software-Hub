@@ -11,3 +11,8 @@ The app never loads third-party icons from an untrusted runtime URL. App manifes
 
 
 ArtCraft app image credits: see [ArtCraft icon notice](../third_party/ARTCRAFT-ICONS.md).
+
+SolidCraft and MailCraft icons are also copied unmodified from the
+ArtCraft Launcher's official icon directory. They retain their distinct
+upstream MIT licenses in `third_party/LICENSE-MIT-SolidCraft.txt`
+and `third_party/LICENSE-MIT-MailCraft.txt`.

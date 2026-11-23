@@ -68,3 +68,18 @@ Fedora requires DNF, `pkexec` and a running PolicyKit authentication agent.
 Windows uses WinGet or Windows Installer with normal UAC prompts; macOS
 requires Homebrew for Blender/Krita while ArtCraft DMGs open for manual copying.
 No privilege prompt is bypassed. See [INSTALLATION.md](INSTALLATION.md).
+
+## Downloads dashboard
+
+Transfer history is stored locally under `ucsh:transfers:v1`, capped at 100.
+Queued native downloads are serialized in the React session; closing the app
+interrupts outstanding work rather than continuing a hidden transfer.
+Native installer jobs remain subject to OS authentication.
+
+`src-tauri/src/artcraft_catalog.rs` fetches and verifies the official
+signed ArtCraft hosted catalog against the pinned public key in
+`src-tauri/assets/`. If the service is unavailable or the signature cannot
+be verified, the UI continues with the 19 bundled ArtCraft entries.
+
+The remote catalog is read-only metadata: no new installer executable IDs
+are accepted from a network response.

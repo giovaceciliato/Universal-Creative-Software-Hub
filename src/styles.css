@@ -176,3 +176,55 @@ h3 { font-size: 18px; letter-spacing: -.035em; }
 .install-explanation { font-size: 12px; line-height: 1.7; color: #4d4d4d; margin: 16px 0; }
 .install-status { display: flex; gap: 12px; align-items: center; padding: 13px 10px; background: #f5f5f5; border: 1px solid #ddd; font-size: 11px; line-height: 1.5; }
 .install-error { border-left: 3px solid #171717; background: #f1f1f1; margin-top: 15px; padding: 12px; font-size: 12px; overflow-wrap: anywhere; }
+
+
+/* Monochrome transfer activity and signed catalog status. */
+.catalog-sync-strip { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid #111; border-bottom:1px solid #e4e4e4; padding:13px 0; margin-bottom:19px; }
+.catalog-sync-strip > div { min-width:0; display:flex; flex-wrap:wrap; align-items:baseline; column-gap:13px; row-gap:5px; }
+.catalog-sync-strip strong { font-size:12px; font-weight:700; }
+.catalog-sync-strip span, .catalog-sync-strip small { font-size:11px; color:#777; }
+.catalog-sync-strip small { flex-basis:100%; }
+.catalog-sync-strip .outline-button { flex:none; }
+.transfer-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid #111; border-bottom:1px solid #e2e2e2; }
+.transfer-summary > div { padding:20px 12px; border-right:1px solid #e5e5e5; }
+.transfer-summary > div:first-child { padding-left:0; }
+.transfer-summary > div:last-child { border:0; }
+.transfer-summary strong { display:block; font-size:29px; line-height:1; font-weight:650; letter-spacing:-.06em; color:#111; }
+.transfer-summary span { display:block; margin-top:9px; font-size:11px; color:#777; }
+.transfer-explanation { display:flex; gap:10px; align-items:flex-start; font-size:11px; color:#777; line-height:1.7; padding:21px 0; }
+.transfer-explanation svg { flex:none; }
+.transfer-list { border-top:1px solid #111; margin-top:4px; }
+.transfer-row { display:flex; align-items:flex-start; gap:19px; padding:23px 0; border-bottom:1px solid #e7e7e7; }
+.transfer-body { flex:1; min-width:0; }
+.transfer-row-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.transfer-row-head > div strong { display:block; font-size:16px; font-weight:650; }
+.transfer-row-head > div span { display:block; margin-top:6px; font-size:11px; color:#888; }
+.transfer-status { font-size:11px; font-weight:650; white-space:normal; text-align:right; }
+.transfer-versions { display:flex; flex-wrap:wrap; gap:9px 23px; margin:18px 0 12px; }
+.transfer-versions span { color:#999; font-size:11px; }
+.transfer-versions strong { color:#252525; font-weight:600; }
+.transfer-meter { display:flex; align-items:center; gap:14px; }
+.transfer-meter-track { flex:1; background:#eaeaea; height:7px; overflow:hidden; }
+.transfer-meter-track > span { display:block; height:100%; background:#111; transition:width .2s ease; }
+.transfer-meter small { flex:none; color:#777; font-size:10px; font-variant-numeric:tabular-nums; }
+.transfer-detail { color:#777; font-size:11px; line-height:1.6; overflow-wrap:anywhere; margin:10px 0 0; }
+.transfer-indeterminate { font-size:11px; color:#777; border-left:2px solid #111; padding:7px 12px; background:#f8f8f8; }
+.transfer-retry { margin-top:14px; }
+@media(max-width:900px) {
+  .transfer-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .transfer-summary > div:nth-child(2) { border-right:0; }
+  .transfer-summary > div:nth-child(-n+2) { border-bottom:1px solid #e5e5e5; }
+}
+@media(max-width:640px) {
+  .catalog-sync-strip { align-items:stretch; flex-direction:column; }
+  .catalog-sync-strip .outline-button { align-self:flex-start; }
+  .transfer-row { gap:12px; }
+  .transfer-row .app-icon { width:42px; height:42px; padding:8px; }
+  .transfer-row-head { flex-direction:column; gap:8px; }
+  .transfer-status { text-align:left; }
+  .transfer-meter { flex-wrap:wrap; }
+  .transfer-meter-track { flex-basis:100%; }
+}
+
+.downloads-head-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:9px; }
+@media(max-width:650px) { .downloads-head-actions { justify-content:flex-start; } }

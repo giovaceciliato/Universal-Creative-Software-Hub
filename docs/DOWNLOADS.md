@@ -55,3 +55,19 @@ The version pin must be reviewed whenever Blender or Krita publishes a new relea
 - [ ] Add release monitoring / freshness metadata with publisher verification
 - [ ] Verify publisher signatures on Windows and notarization on macOS before initiating installation
 - [ ] Support more CPU architectures and installer formats after testing
+
+## Activity dashboard (new)
+
+The **Downloads** tab tracks requested file downloads and installer tasks:
+active progress, queue position, selected release version, previously
+detected installed version, success/error, and the resulting file path where
+available. Download requests are queued **one at a time** in the running UI.
+
+The "Different-version tasks" count includes tasks with **known unequal**
+installed/selected version strings. This is not an update-availability claim:
+the hub does not yet compare package-manager feeds or report all upgrades.
+
+History is stored in localStorage on this machine and can be cleared. A
+transfer still active when the app closes is marked interrupted on restart.
+True background transfer, cancellation, resume and delta updates are future
+features.
