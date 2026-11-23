@@ -136,6 +136,12 @@ fn entries() -> Result<Vec<CatalogEntry>, String> {
         include_str!("../../catalog/apps/tahoma2d.json"),
         include_str!("../../catalog/apps/wick-editor.json"),
         include_str!("../../catalog/apps/wings3d.json"),
+        // Independently reviewed hints; the remote approved feed cannot supply commands.
+        r#"{"id":"bimcraft","integrations":{
+          "linux":{"rpmNames":["bimcraft"],"executableNames":["bimcraft"]},
+          "windows":{"executableNames":["bimcraft.exe"]},
+          "macos":{"bundleNames":["BIMCraft.app"]}
+        }}"#,
     ]
         .iter()
         .map(|data| serde_json::from_str(data).map_err(|e| format!("Invalid catalog manifest: {e}")))
@@ -273,6 +279,7 @@ fn scan_windows(
     let known_subfolders: &[&str] = match app {
         "blender" => &["Blender Foundation", "Blender", "Blender Foundation/Blender 5.3"],
         "krita" => &["Krita (x64)", "Krita", "Krita (x64)/bin", "Krita/bin"],
+        "bimcraft" => &["BIMCraft"],
         "photocraft" => &["PhotoCraft", "ArtCraft/PhotoCraft"],
         "vectorcraft" => &["VectorCraft", "ArtCraft/VectorCraft"],
         "filmcraft" => &["FilmCraft", "ArtCraft/FilmCraft"],
@@ -361,7 +368,9 @@ mod tests {
     #[test]
     fn manifests_are_loadable() {
         let manifests = entries().unwrap();
-        assert_eq!(manifests.len(), 69);
+        assert_eq!(manifests.len(), 70);
+        let bimcraft = manifests.iter().find(|app| app.id == "bimcraft").unwrap();
+        assert_eq!(bimcraft.integrations["linux"].rpm_names, vec!["bimcraft"]);
         assert!(manifests.iter().any(|app| app.id == "blender"));
         assert!(manifests.iter().any(|app| app.id == "krita"));
         assert!(manifests.iter().any(|app| app.id == "anicraft"));

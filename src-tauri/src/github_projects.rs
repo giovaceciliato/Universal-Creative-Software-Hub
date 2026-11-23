@@ -33,6 +33,56 @@ pub struct ReleaseInfo {
     pub assets: Vec<ReleaseAsset>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogDownloadOffer {
+    repo: String,
+    version: String,
+    asset: ReleaseAsset,
+}
+
+// Conservative matching: require an explicit platform/CPU suffix, a digest and
+// one unique candidate at the preferred format. Never guess between two builds.
+fn select_catalog_asset<'a>(assets: &'a [ReleaseAsset], os: &str, arch: &str, fedora: bool) -> Option<&'a ReleaseAsset> {
+    let suffixes: Vec<String> = match (os, arch) {
+        ("linux", "x86_64" | "aarch64") => {
+            let mut formats = Vec::new();
+            if fedora { formats.push(format!("-linux-{arch}.rpm")); }
+            formats.push(format!("-linux-{arch}.appimage"));
+            formats
+        }
+        ("windows", "x86_64") => vec!["-windows-x64.msi".into(), "-windows-x64.exe".into()],
+        ("windows", "aarch64") => vec!["-windows-arm64.msi".into()],
+        ("macos", "x86_64" | "aarch64") => vec!["-macos-universal.dmg".into()],
+        _ => return None,
+    };
+    for suffix in suffixes {
+        let candidates: Vec<_> = assets.iter().filter(|a| {
+            let name = a.name.to_ascii_lowercase();
+            let tokens: Vec<_> = name.split(['-', '_', '.']).collect();
+            name.ends_with(&suffix)
+                && !tokens.iter().any(|t| matches!(*t, "cli" | "debug" | "symbols" | "source" | "server" | "headless"))
+        }).collect();
+        if candidates.len() == 1 { return candidates[0].sha256_available.then_some(candidates[0]); }
+        if candidates.len() > 1 { return None; }
+    }
+    None
+}
+
+pub async fn resolve_catalog_download(repo: String) -> Result<Option<CatalogDownloadOffer>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let repo = normalize_repo(&repo)?;
+        let Some(raw) = fetch_latest(&api_client()?, &repo)? else { return Ok(None) };
+        // Do not decide uniqueness from a truncated list.
+        if raw.assets.len() > 100 { return Ok(None); }
+        let release = info_from_release(&repo, raw);
+        let fedora = std::fs::read_to_string("/etc/os-release").unwrap_or_default()
+            .lines().any(|line| matches!(line.trim(), "ID=fedora" | "ID=\"fedora\""));
+        Ok(select_catalog_asset(&release.assets, std::env::consts::OS, std::env::consts::ARCH, fedora)
+            .map(|asset| CatalogDownloadOffer { repo, version: release.tag.clone(), asset: asset.clone() }))
+    }).await.map_err(|e| format!("Release resolution failed: {e}"))?
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectInfo {
@@ -215,6 +265,7 @@ fn safe_asset_url(repo: &str, tag: &str, asset: &AssetApi) -> bool {
     }
     let Ok(url) = Url::parse(&asset.browser_download_url) else { return false };
     if url.host_str() != Some("github.com") || url.scheme() != "https"
+        || !url.username().is_empty() || url.password().is_some() || url.port().is_some()
         || url.query().is_some() || url.fragment().is_some() { return false; }
     let Some(segments) = url.path_segments() else { return false };
     let seg: Vec<_> = segments.collect();
@@ -389,6 +440,49 @@ pub async fn download_github_asset(
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn catalog_asset(id: u64, name: &str) -> ReleaseAsset {
+        ReleaseAsset { id, name: name.into(), size_bytes: 100, sha256_available: true }
+    }
+    #[test]
+    fn catalog_selects_correct_os_arch_and_format() {
+        let assets = vec![
+            catalog_asset(1, "bimcraft-0.12.0-linux-x86_64.rpm"),
+            catalog_asset(2, "bimcraft-0.12.0-linux-aarch64.rpm"),
+            catalog_asset(3, "bimcraft-0.12.0-windows-x64.msi"),
+            catalog_asset(4, "bimcraft-0.12.0-macos-universal.dmg"),
+            catalog_asset(5, "bimcraft-0.12.0-linux-x86_64.AppImage"),
+            catalog_asset(6, "bimcraft-cli-0.12.0-macos-universal.dmg"),
+        ];
+        assert_eq!(select_catalog_asset(&assets, "linux", "x86_64", true).unwrap().id, 1);
+        assert_eq!(select_catalog_asset(&assets, "linux", "aarch64", true).unwrap().id, 2);
+        assert_eq!(select_catalog_asset(&assets, "windows", "x86_64", false).unwrap().id, 3);
+        assert_eq!(select_catalog_asset(&assets, "macos", "aarch64", false).unwrap().id, 4);
+        assert_eq!(select_catalog_asset(&assets, "linux", "x86_64", false).unwrap().id, 5);
+        assert!(select_catalog_asset(&assets, "windows", "aarch64", false).is_none());
+        assert!(select_catalog_asset(&assets, "linux", "riscv64", true).is_none());
+    }
+    #[test]
+    fn ambiguous_missing_or_unverified_assets_require_official_page() {
+        let mut assets = vec![catalog_asset(1, "app-linux-x86_64.rpm")];
+        assets[0].sha256_available = false;
+        assert!(select_catalog_asset(&assets, "linux", "x86_64", true).is_none());
+        assets.push(catalog_asset(2, "other-linux-x86_64.rpm"));
+        assert!(select_catalog_asset(&assets, "linux", "x86_64", true).is_none());
+        assert!(select_catalog_asset(&[], "linux", "x86_64", true).is_none());
+        assert!(select_catalog_asset(&[catalog_asset(1, "setup.exe")], "windows", "x86_64", false).is_none());
+    }
+    #[test]
+    fn catalog_metadata_cannot_redirect_download_to_another_repo() {
+        let mut asset = AssetApi { id: 1, name: "bimcraft-0.12.0-linux-x86_64.rpm".into(), size: 100,
+            browser_download_url: "https://github.com/IPedrax/BIMCraft/releases/download/v0.12.0/bimcraft-0.12.0-linux-x86_64.rpm".into(),
+            digest: Some(format!("sha256:{}", "a".repeat(64))) };
+        assert!(safe_asset_url("IPedrax/BIMCraft", "v0.12.0", &asset));
+        assert!(!safe_asset_url("attacker/BIMCraft", "v0.12.0", &asset));
+        assert!(!safe_asset_url("IPedrax/BIMCraft", "v0.13.0", &asset));
+        asset.name = "../installer.rpm".into();
+        assert!(!safe_asset_url("IPedrax/BIMCraft", "v0.12.0", &asset));
+        assert!(expected_sha256(Some("sha256:bad")).is_none());
+    }
     #[test]
     fn github_url_is_strict() {
         assert_eq!(normalize_repo("https://github.com/godotengine/godot").unwrap(), "godotengine/godot");

@@ -24,4 +24,8 @@ jobs:
         run: node --test scripts/test-create-approved-app-pr.mjs
       - name: Check TypeScript and bundle
         run: npm run build
+      - name: Install browser for download flow tests
+        run: npx playwright install --with-deps chromium
+      - name: Test approved downloads and installation confirmation
+        run: npm run test:downloads
 
