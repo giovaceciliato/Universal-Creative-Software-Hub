@@ -12,6 +12,7 @@ import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } 
 import featured50 from "../catalog/collections/creative-top-50.json";
 import { loadTransferHistory, saveTransferHistory, formatBytes, transferCounts, type TransferTask } from "./downloadActivity";
 import { loadGithubProjects, saveGithubProjects, githubReleaseStatus, type GitHubProjectInfo, type GitHubRelease, type GitHubAsset, type WatchedGitHubProject } from "./githubTracking";
+import { emptyAppRequest, validateAppRequest, localRequestMatches, issueCreationUrl, type AppRequestDraft, type RequestCheckResult, type AppRequestMatch } from "./appRequests";
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
 import type { InstalledMatch } from "./integrations/contracts";
 
@@ -118,6 +119,15 @@ const nav: { key: View; label: string; icon: typeof Compass }[] = [
 
 export default function App() {
   const [view, setView] = useState<View>("discover");
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestDraft, setRequestDraft] = useState<AppRequestDraft>(emptyAppRequest);
+  const [requestErrors, setRequestErrors] = useState("");
+  const [requestChecking, setRequestChecking] = useState(false);
+  const [requestCheck, setRequestCheck] = useState<{ signature: string; matches: AppRequestMatch[]; truncated: boolean } | null>(null);
+  const [approvedApps, setApprovedApps] = useState<CatalogApp[]>([]);
+  const [approvedStatus, setApprovedStatus] = useState<"loading" | "verified" | "offline">("offline");
+  const [approvedError, setApprovedError] = useState("");
+  const approvedRefreshStarted = useRef(false);
   const [githubProjects, setGithubProjects] = useState<WatchedGitHubProject[]>(loadGithubProjects);
   const [addingGithub, setAddingGithub] = useState(false);
   const [githubDraftUrl, setGithubDraftUrl] = useState("");
@@ -216,18 +226,15 @@ export default function App() {
   useEffect(() => { saveGithubProjects(githubProjects); }, [githubProjects]);
 
   const catalog = useMemo<CatalogApp[]>(() => {
-    if (!signedApps) return bundledCatalog;
-    const merged = new Map(bundledCatalog.map(app => [app.id, app]));
-    for (const item of signedApps) {
+    const merged = new Map<string, CatalogApp>(bundledCatalog.map(app => [app.id, app]));
+    if (signedApps) for (const item of signedApps) {
       const existing = merged.get(item.id);
       if (existing) {
-        // Signed metadata cannot rewrite the publisher/repository identity of a bundled app.
         if (existing.links.sourceCode === `https://github.com/${item.repo}`) {
           merged.set(item.id, { ...existing, description: item.tagline || existing.description });
         }
         continue;
       }
-      // A signed catalog addition is a listing only, NEVER a native installation allowlist entry.
       merged.set(item.id, {
         id: item.id, name: item.name, publisher: item.publisher,
         description: item.tagline || "ArtCraft Launcher catalog application",
@@ -243,8 +250,11 @@ export default function App() {
         },
       });
     }
+    // Only the maintainer-reviewed file on the repository's main branch is used.
+    // Neither approved entries nor user requests can create native install commands.
+    for (const item of approvedApps) if (!merged.has(item.id)) merged.set(item.id, item);
     return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [signedApps]);
+  }, [signedApps, approvedApps]);
   const categories = useMemo(() => [...new Set(catalog.flatMap(app => app.categories))].sort(), [catalog]);
   const activeTransfers = transferCounts(transfers.map(t => ({
     ...t,
@@ -288,6 +298,79 @@ export default function App() {
     catalogRefreshStarted.current = true;
     void refreshArtcraft();
   }, []);
+
+  async function refreshApproved() {
+    if (!native) { setApprovedStatus("offline"); return; }
+    setApprovedStatus("loading");
+    setApprovedError("");
+    try {
+      const result = await invoke<CatalogApp[]>("refresh_approved_apps");
+      setApprovedApps(result);
+      setApprovedStatus("verified");
+    } catch (error) {
+      setApprovedStatus("offline");
+      setApprovedError(String(error));
+    }
+  }
+
+  useEffect(() => {
+    if (!native || approvedRefreshStarted.current) return;
+    approvedRefreshStarted.current = true;
+    void refreshApproved();
+  }, []);
+
+  const changeRequestDraft = (next: AppRequestDraft) => {
+    setRequestDraft(next);
+    setRequestCheck(null);
+    setRequestErrors("");
+  };
+
+  async function verifyRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (requestChecking) return;
+    const problem = validateAppRequest(requestDraft);
+    if (problem) { setRequestErrors(problem); return; }
+    if (!native) {
+      setRequestErrors("Il controllo completo delle richieste GitHub richiede l'applicazione desktop.");
+      return;
+    }
+    setRequestChecking(true);
+    setRequestErrors("");
+    setRequestCheck(null);
+    try {
+      // The backend cross-checks approved entries and open/closed GitHub issues.
+      const checked = await invoke<RequestCheckResult>("check_app_request", { req: requestDraft });
+      const matches = [
+        ...localRequestMatches(requestDraft, catalog),
+        ...checked.matches,
+      ];
+      const seen = new Set<string>();
+      const distinct = matches.filter(match => {
+        const key = match.state + ":" + match.url.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setRequestCheck({ signature: JSON.stringify(requestDraft), matches: distinct, truncated: checked.truncated });
+    } catch (error) {
+      setRequestErrors("Impossibile completare il controllo delle richieste: " + String(error));
+    } finally {
+      setRequestChecking(false);
+    }
+  }
+
+  async function submitAppRequest() {
+    if (!requestCheck || requestCheck.signature !== JSON.stringify(requestDraft) ||
+        requestCheck.matches.length || requestCheck.truncated || requestChecking) return;
+    try {
+      await openUrl(issueCreationUrl(requestDraft));
+      setRequestOpen(false);
+      setNotification("GitHub ha aperto la richiesta precompilata. Devi confermare la pubblicazione dell'issue su GitHub.");
+      setRequestCheck(null);
+    } catch (error) {
+      setRequestErrors(String(error));
+    }
+  }
 
   const favorite = (id: string) => setFavorites(current =>
     current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
@@ -682,7 +765,25 @@ export default function App() {
                 <RefreshCw size={15} className={catalogStatus === "loading" ? "spin" : ""}/> Refresh ArtCraft
               </button>
             </div>
+            <div className="catalog-sync-strip">
+              <div>
+                <strong>Community catalog</strong>
+                <span>{approvedStatus === "verified"
+                  ? `${approvedApps.length} app approvate · sincronizzato con GitHub main`
+                  : approvedStatus === "loading" ? "Controllo approvazioni..."
+                  : "Catalogo integrato disponibile"}
+                </span>
+                {approvedError && <small>Catalogo approvato online non disponibile: rimangono le app già integrate.</small>}
+              </div>
+              <button className="outline-button" type="button"
+                disabled={!native || approvedStatus === "loading"} onClick={() => { void refreshApproved(); }}>
+                <RefreshCw size={15} className={approvedStatus === "loading" ? "spin" : ""}/> Aggiorna approvate
+              </button>
+            </div>
             <div className="toolbar-actions">
+              <button className="black-button" type="button" onClick={() => {
+                setRequestOpen(true); setRequestErrors(""); setRequestCheck(null);
+              }}><Plus size={16}/> Richiedi un'app</button>
               <button className="outline-button" type="button" onClick={() => { void scanComputer(); }} disabled={scanning}>
                 <RefreshCw size={16} className={scanning ? "spin" : ""} />
                 {scanning ? "Scanning..." : "Scan computer"}
@@ -1096,6 +1197,98 @@ export default function App() {
               <ArrowDownToLine size={16}/>
             </button>
           </div>
+        </div>
+      </div>}
+
+
+      {requestOpen && <div className="modal-backdrop" role="presentation">
+        <div className="modal request-modal" role="dialog" aria-modal="true" aria-labelledby="request-title">
+          <header>
+            <div><p className="eyebrow">COMMUNITY SOFTWARE</p><h2 id="request-title">Richiedi un'applicazione</h2></div>
+            <button type="button" className="icon-action" aria-label="Chiudi richiesta"
+              disabled={requestChecking} onClick={() => setRequestOpen(false)}><X size={19}/></button>
+          </header>
+          <p className="form-help">
+            Il sistema controllerà se l'app è già nel catalogo o se qualcuno l'ha già richiesta.
+            In caso contrario potrai inviare la proposta su GitHub. Sarà pubblicata solo dopo la revisione e il merge di una PR.
+          </p>
+          <form onSubmit={e => { void verifyRequest(e); }}>
+            <div className="request-two-col">
+              <label className="form-label">Nome applicazione
+                <input autoFocus required maxLength={80} value={requestDraft.name} placeholder="Nome del software"
+                  onChange={e => changeRequestDraft({...requestDraft, name:e.target.value})}/>
+              </label>
+              <label className="form-label">Produttore / autore
+                <input required maxLength={100} value={requestDraft.publisher} placeholder="Organizzazione o autore"
+                  onChange={e => changeRequestDraft({...requestDraft, publisher:e.target.value})}/>
+              </label>
+            </div>
+            <label className="form-label">Sito ufficiale HTTPS
+              <input type="url" required maxLength={350} value={requestDraft.website} placeholder="https://example.org"
+                onChange={e => changeRequestDraft({...requestDraft, website:e.target.value})}/>
+            </label>
+            <label className="form-label">Repository GitHub (facoltativo)
+              <input type="url" maxLength={350} value={requestDraft.repository}
+                placeholder="https://github.com/owner/repository"
+                onChange={e => changeRequestDraft({...requestDraft, repository:e.target.value})}/>
+            </label>
+            <label className="form-label">Descrizione (10–240 caratteri)
+              <textarea rows={3} minLength={10} maxLength={240} required value={requestDraft.description}
+                placeholder="Cosa fa il programma? Per quali creativi è utile?"
+                onChange={e => changeRequestDraft({...requestDraft, description:e.target.value})}/>
+            </label>
+            <div className="request-two-col">
+              <label className="form-label">Distribuzione
+                <select value={requestDraft.pricingModel}
+                  onChange={e => changeRequestDraft({...requestDraft, pricingModel:e.target.value as AppRequestDraft["pricingModel"]})}>
+                  <option value="free-open-source">Gratis e open source</option>
+                  <option value="freeware">Versione gratuita / freeware</option>
+                </select>
+              </label>
+              <fieldset className="request-platforms">
+                <legend>Piattaforme</legend>
+                {(["windows","macos","linux","web"] as const).map(item =>
+                  <label key={item}><input type="checkbox" checked={requestDraft.platforms.includes(item)}
+                    onChange={e => changeRequestDraft({...requestDraft,
+                      platforms:e.target.checked
+                        ? [...requestDraft.platforms, item]
+                        : requestDraft.platforms.filter(platform => platform !== item),
+                    })}/>
+                    {item === "linux" ? "Fedora / Linux" : item === "macos" ? "macOS" : item === "web" ? "Web" : "Windows"}
+                  </label>)}
+              </fieldset>
+            </div>
+            {requestErrors && <p className="form-error" role="alert">{requestErrors}</p>}
+            {requestCheck && <div className="request-results" role="status">
+              {requestCheck.truncated && <p>Controllo incompleto: troppe richieste su GitHub. Verifica manualmente prima di inviare.</p>}
+              {requestCheck.matches.length ? <>
+                <strong>App già presente o richiesta simile</strong>
+                <div className="request-match-list">
+                  {requestCheck.matches.map((match,i) => <div key={match.url + i}>
+                    <span><b>{match.name}</b> · {match.state === "approved" ? "Approvata / in catalogo" : match.state === "open" ? "Richiesta aperta" : "Richiesta chiusa"} · {match.reason}</span>
+                    <button type="button" className="outline-button" onClick={() => { void openWebsite(match.url); }}>
+                      Vedi <ArrowUpRight size={14}/>
+                    </button>
+                  </div>)}
+                </div>
+                <p className="form-help">Evitiamo richieste duplicate: controlla quella esistente.</p>
+              </> : !requestCheck.truncated && <p><CheckCircle2 size={16}/> Nessuna richiesta uguale trovata tra quelle controllate. Puoi proporre questa app.</p>}
+            </div>}
+            <div className="modal-actions">
+              <button type="button" className="outline-button" disabled={requestChecking} onClick={() => setRequestOpen(false)}>Annulla</button>
+              <button type="submit" className="outline-button" disabled={requestChecking || !native}>
+                <Search size={16}/>{requestChecking ? "Verifico su GitHub..." : "Verifica duplicati"}
+              </button>
+              <button type="button" className="black-button"
+                disabled={!native || !requestCheck || requestCheck.signature !== JSON.stringify(requestDraft) ||
+                  requestCheck.matches.length > 0 || requestCheck.truncated || requestChecking}
+                onClick={() => { void submitAppRequest(); }}>
+                Apri richiesta su GitHub <ArrowUpRight size={16}/>
+              </button>
+            </div>
+            <p className="form-help">Per inviare l'issue devi accedere a GitHub e confermare la pubblicazione.
+              L'approvazione finale spetta ai manutentori.</p>
+          </form>
         </div>
       </div>}
 

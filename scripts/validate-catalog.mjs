@@ -62,3 +62,8 @@ assert(featured.id === "creative-top-50", "Featured collection id must remain st
 assert(Array.isArray(featured.ids) && featured.ids.length === 50, "Creative Top 50 must contain exactly 50 apps");
 assert(new Set(featured.ids).size === 50, "Creative Top 50 must not include duplicates");
 for (const id of featured.ids) assert(ids.has(id), `Creative Top 50 references missing catalog app ${id}`);
+
+import { validateApprovedFeed } from "./community-requests.mjs";
+const reviewed = JSON.parse(readFileSync(new URL("../catalog/approved-community.json", import.meta.url), "utf8"));
+validateApprovedFeed(reviewed, ids);
+console.log("Approved community catalog validated: " + reviewed.apps.length + " apps.");

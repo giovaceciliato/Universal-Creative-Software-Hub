@@ -270,3 +270,34 @@ The prompt may be dismissed, and the Downloads history offers a way to
 reopen it later.
 
 See [Private shortcuts and install prompt](docs/PRIVATE_LIBRARY.md).
+
+## Community application requests and approval
+
+**Discover → Richiedi un'app** lets any user propose free creative software
+without gaining direct write permissions to the catalog. The native desktop
+app checks for matching entries in the bundled/signed/approved catalogs
+and previously opened or closed GitHub issues before offering to open a
+pre-filled new GitHub Issue. Users must be signed into GitHub and actually
+click **Submit new issue** to send the request. Nothing is submitted in
+the background.
+
+A maintainer with write permission can comment `/approve-app` on a
+structured, still-open request. A GitHub Actions workflow verifies the
+maintainer's actual repository permission, validates the request fields,
+rejects already-approved apps, and creates a **review pull request** with
+only metadata in `catalog/approved-community.json`. Approval of the
+request itself never merges code. Only once the review PR passes checks
+and is **merged to main** does the app appear in the Hub's public
+community catalog after refreshing (or restarting) the app.
+
+Approved community entries are searchable, have official links and can
+be saved to My Library. They **cannot execute installers, run scripts,
+or gain native package-manager privileges**. Installer integration
+requires separate, reviewed Rust allowlist changes.
+
+See [Application request review workflow](docs/APP_REQUESTS.md).
+
+> Repository setting: maintainers must enable
+> **Settings → Actions → General → Workflow permissions → Allow GitHub Actions
+> to create and approve pull requests** for automatic PR preparation.
+> If it is disabled, a maintainer must prepare the catalog PR manually.

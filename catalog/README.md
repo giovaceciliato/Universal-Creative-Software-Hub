@@ -68,3 +68,16 @@ Detection hints remain untrusted, read-only *candidate identifiers*.
 Installation package names for verified Fedora applications live
 **separately** in the backend allowlist; catalog editors cannot add
 arbitrary OS commands or gain executable install permissions.
+
+## Community-approved applications
+
+`catalog/approved-community.json` is a separate, maintainer-reviewed
+metadata-only feed. User-proposed apps enter this file through a review
+PR, **not** through arbitrary GitHub issue content.
+
+The desktop app reads the version from the trusted default branch
+`main`, after verifying each entry's fields. The initial file is empty.
+Community apps appear in Discover only after PR merge and refresh.
+No `integrations`, executable paths or installation commands are allowed
+in the feed, and entry publication does not modify Rust's installation
+allowlist. See [APP_REQUESTS.md](../docs/APP_REQUESTS.md).
