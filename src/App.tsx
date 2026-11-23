@@ -206,7 +206,12 @@ export default function App() {
     return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [signedApps]);
   const categories = useMemo(() => [...new Set(catalog.flatMap(app => app.categories))].sort(), [catalog]);
-  const activeTransfers = transferCounts(transfers);
+  const activeTransfers = transferCounts(transfers.map(t => ({
+    ...t,
+    installedVersion: t.installedVersion ?? scanReport?.matches.find(m =>
+      m.appId === t.appId && m.installedVersion,
+    )?.installedVersion,
+  })));
   const saved = catalog.filter(app => favorites.includes(app.id));
   const filtered = useMemo(() => catalog.filter(app => {
     const q = query.trim().toLowerCase();
@@ -247,8 +252,8 @@ export default function App() {
     } catch (error) { setNotification(`Could not open link: ${String(error)}`); }
   }
 
-  async function scanComputer() {
-    setView("installed");
+  async function scanComputer(stayOnPage = false) {
+    if (!stayOnPage) setView("installed");
     if (!native) {
       setNotification("A computer scan requires the native desktop application.");
       return;
@@ -640,12 +645,19 @@ export default function App() {
                 <h1>Downloads.</h1>
                 <p className="subheading">Queued packages, active transfers and installation history.</p>
               </div>
-              <button type="button" className="outline-button"
-                disabled={!transfers.some(t => ["completed", "manual", "failed", "interrupted"].includes(t.status))}
-                onClick={() => setTransfers(xs => xs.filter(t =>
-                  !["completed", "manual", "failed", "interrupted"].includes(t.status)))}>
-                <Trash2 size={16}/> Clear finished
-              </button>
+              <div className="downloads-head-actions">
+                <button type="button" className="outline-button" disabled={!native || scanning}
+                  onClick={() => { void scanComputer(true); }}>
+                  <RefreshCw size={15} className={scanning ? "spin" : ""}/>
+                  {scanning ? "Scanning..." : "Scan installed versions"}
+                </button>
+                <button type="button" className="outline-button"
+                  disabled={!transfers.some(t => ["completed", "manual", "failed", "interrupted"].includes(t.status))}
+                  onClick={() => setTransfers(xs => xs.filter(t =>
+                    !["completed", "manual", "failed", "interrupted"].includes(t.status)))}>
+                  <Trash2 size={16}/> Clear finished
+                </button>
+              </div>
             </header>
             <div className="transfer-summary" aria-label="Download counts">
               <div><strong>{activeTransfers.active}</strong><span>Active</span></div>
@@ -684,7 +696,9 @@ export default function App() {
                         <span className="transfer-status">{statusLabel[task.status]}</span>
                       </div>
                       <div className="transfer-versions">
-                        <span>Installed: <strong>{task.installedVersion ?? "Unknown / not scanned"}</strong></span>
+                        <span>Installed: <strong>{task.installedVersion ?? scanReport?.matches.find(m =>
+                          m.appId === task.appId && m.installedVersion,
+                        )?.installedVersion ?? "Unknown / not scanned"}</strong></span>
                         <span>Selected: <strong>{task.targetVersion === "repository" ? "System repository" : task.targetVersion}</strong></span>
                       </div>
                       {hasProgress && (active || task.status === "queued") &&
