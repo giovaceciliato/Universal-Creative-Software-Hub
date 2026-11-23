@@ -79,3 +79,18 @@ See [Platform support](docs/PLATFORMS.md) for a more precise target and testing 
 ## License
 
 The hub's own source code is licensed under the [MIT License](LICENSE). Third-party applications listed in the catalog retain their **own** licenses, trademarks, and distribution terms.
+
+## Try the early desktop prototype
+
+The first code prototype is being developed in `feat/desktop-mvp-shell`. It includes Discover, catalog search and filtering, locally saved favorites and shortcuts, and the native Tauri desktop shell. Updates and package installation are **not implemented**.
+
+```sh
+npm install
+npm run validate:catalog
+npm run dev           # browser preview (cannot launch local files)
+npm run tauri dev     # native Windows/macOS/Fedora development shell
+```
+
+The native command generates temporary platform icons from an SVG source before starting Tauri. Install Rust and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) first.
+
+See [Development](docs/DEVELOPMENT.md) for requirements and current limitations. Cross-platform installers are targets and must pass real build/testing checks before release.
