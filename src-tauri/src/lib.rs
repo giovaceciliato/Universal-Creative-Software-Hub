@@ -1,6 +1,7 @@
 mod scanner;
 mod downloads;
 mod installations;
+mod artcraft_catalog;
 
 #[tauri::command]
 async fn scan_installed_apps() -> Result<scanner::ScanReport, String> {
@@ -37,6 +38,11 @@ async fn install_app(
     installations::install_app(app_id, expected_version, app).await
 }
 
+#[tauri::command]
+async fn refresh_artcraft_catalog() -> Result<artcraft_catalog::SignedCatalog, String> {
+    artcraft_catalog::refresh_artcraft_catalog().await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -48,6 +54,7 @@ pub fn run() {
             download_app,
             preview_install,
             install_app,
+            refresh_artcraft_catalog,
         ])
         .run(tauri::generate_context!())
         .expect("error running Universal Creative Software Hub");

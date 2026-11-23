@@ -78,3 +78,14 @@ A user can find Blender or Krita, open its official download page, add a locally
 - [ ] Verify upstream detached signatures against pinned signing keys
 - [ ] Automate safe macOS DMG copying (manual Finder step for now)
 - [ ] Add true software update detection and upgrades
+
+## Downloads and ArtCraft sync
+- [x] Downloads page showing active, queued, finished and interrupted tasks
+- [x] Selected release version and detected installed version per task
+- [x] Local activity history with an explicit clear action
+- [x] Add official ArtCraft Launcher community apps SolidCraft and MailCraft
+- [x] Verify Ed25519-signed hosted ArtCraft catalog at startup and on refresh
+- [x] New signed app listings never receive installer permissions automatically
+- [ ] Independent signed catalog cache for offline newly introduced apps
+- [ ] Improve native download pause/resume, cancellation and interrupted-job recovery
+- [ ] Verified version comparison and automatic update availability checks

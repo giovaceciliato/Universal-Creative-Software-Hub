@@ -34,3 +34,19 @@ to support direct installation.
 References:
 - https://getartcraft.com/apps
 - https://github.com/storytold/craft-launcher
+
+## Downloads activity
+
+Installer jobs now appear in **Downloads** with expected package version,
+previously scanned installed version (if available), file-transfer progress
+for ArtCraft releases, and the result of the native installer command.
+
+The downloaded package reaching 100% is **not** an installation success.
+Fedora may still request your password; Windows may still require an UAC
+or MSI interaction; macOS DMG installation finishes manually in Finder.
+Only the installer command result is marked completed.
+
+Official ArtCraft Launcher **community apps** SolidCraft and MailCraft
+are available for discovery and through publisher download pages, but
+are **not** added to the native installation allowlist by the signed
+catalog. Additional installer support requires review.
