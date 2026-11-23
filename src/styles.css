@@ -274,3 +274,11 @@ h3 { font-size: 18px; letter-spacing: -.035em; }
   .github-asset-controls .black-button { justify-content:center; }
   .github-project-footer > span { width:100%; margin-left:0; }
 }
+
+
+/* Local private shortcuts workspace. */
+.private-library-summary { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #141414; border-bottom:1px solid #dadada; padding:14px 0; margin:0 0 26px; gap:15px; }
+.private-library-summary > span { display:flex; align-items:center; gap:10px; font-size:11px; color:#777; }
+.private-library-summary strong { font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.nav-link:disabled, .sidebar-add:disabled, .black-button:disabled { cursor:not-allowed; opacity:.5; }
+@media(max-width:800px) { .private-library-summary { margin-bottom:16px; } }

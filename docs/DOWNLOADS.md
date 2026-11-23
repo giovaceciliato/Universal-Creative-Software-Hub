@@ -83,3 +83,17 @@ repositories and the latest stable release, checks size and SHA-256 when
 GitHub provides a digest, and never executes the saved file. The watched
 repository records the last release downloaded **without changing the
 manually reported installed version**.
+
+## After-download installation prompt
+
+Immediately after the file is fully saved, the launcher offers to
+review the installation method. For a known, allowlisted application,
+**Install with OS authorization** invokes the existing installer plan
+and then the normal OS privilege dialog when required. That installation
+may use the repository channel rather than the downloaded archive.
+
+For a user-supplied GitHub release file, **Open Downloads folder** is the
+manual continuation. Nothing is run or installed from an unreviewed
+GitHub repository automatically. A completed job's action can reopen
+the prompt. Multiple finished downloads queue their prompts one at
+a time.

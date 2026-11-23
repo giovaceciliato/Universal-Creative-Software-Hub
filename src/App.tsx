@@ -15,7 +15,7 @@ import { loadGithubProjects, saveGithubProjects, githubReleaseStatus, type GitHu
 import type { CatalogApp, CustomShortcut, Platform } from "./types";
 import type { InstalledMatch } from "./integrations/contracts";
 
-type View = "discover" | "library" | "installed" | "updates" | "downloads";
+type View = "discover" | "library" | "private" | "installed" | "updates" | "downloads";
 interface SignedCraftApp { id: string; name: string; tagline: string; publisher: string; repo: string; kind: "official" | "community"; }
 interface SignedCraftCatalog { apps: SignedCraftApp[]; rejected: number; source: string; }
 type ShortcutDraft = { name: string; kind: "url" | "path"; target: string };
@@ -37,6 +37,12 @@ interface DownloadResult {
   fileName: string;
   savedPath: string;
   sha256: string;
+  checksumVerified: boolean;
+}
+interface PostDownloadPrompt {
+  task: TransferTask;
+  fileName: string;
+  savedPath: string;
   checksumVerified: boolean;
 }
 interface DownloadProgress { appId: string; received: number; total: number; }
@@ -104,6 +110,7 @@ function AppIcon({ app, size = "md" }: { app: CatalogApp; size?: "md" | "lg" }) 
 const nav: { key: View; label: string; icon: typeof Compass }[] = [
   { key: "discover", label: "Discover", icon: Compass },
   { key: "library", label: "My Library", icon: Library },
+  { key: "private", label: "Libreria privata", icon: FolderOpen },
   { key: "installed", label: "Installed", icon: CheckCircle2 },
   { key: "downloads", label: "Downloads", icon: ArrowDownToLine },
   { key: "updates", label: "Updates", icon: RefreshCw },
@@ -134,6 +141,7 @@ export default function App() {
   const [downloadOffers, setDownloadOffers] = useState<DownloadOffer[]>([]);
   const [completedDownloads, setCompletedDownloads] = useState<Record<string, DownloadResult>>({});
   const [transfers, setTransfers] = useState<TransferTask[]>(loadTransferHistory);
+  const [postDownloadPrompts, setPostDownloadPrompts] = useState<PostDownloadPrompt[]>([]);
   const downloadWorker = useRef(false);
   const activeDownloadId = useRef<string | null>(null);
   const activeInstallId = useRef<string | null>(null);
@@ -530,6 +538,10 @@ export default function App() {
         if (!next.githubRepo) setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
         if (next.githubRepo) setGithubProjects(xs => xs.map(p => p.repo === next.githubRepo
           ? { ...p, downloadedTag: next.targetVersion } : p));
+        setPostDownloadPrompts(prompts => [...prompts, {
+          task: next, fileName: result.fileName, savedPath: result.savedPath,
+          checksumVerified: result.checksumVerified,
+        }]);
         setTransfers(xs => xs.map(x => x.id === next.id ? {
           ...x, status: "completed" as const, received: x.total,
           filePath: result.savedPath,
@@ -578,6 +590,8 @@ export default function App() {
     const name = draft.name.trim();
     const target = draft.target.trim();
     if (!name || !target) { setFormError("Name and target are required."); return; }
+    if (shortcuts.length >= 100) { setFormError("Il limite è di 100 shortcut. Rimuovine uno prima di aggiungerne altri."); return; }
+    if (name.length > 80 || target.length > 2048) { setFormError("Shortcut name or target is too long."); return; }
     if (draft.kind === "url" && !validWebUrl(target)) {
       setFormError("Use an HTTP(S) website URL."); return;
     }
@@ -588,10 +602,21 @@ export default function App() {
     setAdding(false);
     setDraft(emptyDraft);
     setFormError("");
-    setView("library");
+    setView("private");
   }
 
-  const count = shortcuts.length + saved.length + githubProjects.length;
+  const count = saved.length + githubProjects.length;
+  const currentPostDownload = postDownloadPrompts[0];
+  const advancePostDownload = () => setPostDownloadPrompts(current => current.slice(1));
+  async function openDownloadsDirectory() {
+    if (!native) return;
+    try {
+      const directory = await invoke<string>("get_downloads_directory");
+      await openPath(directory);
+    } catch (error) {
+      setNotification(`Could not open the Downloads folder: ${String(error)}`);
+    }
+  }
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -606,14 +631,17 @@ export default function App() {
               <Icon size={18} strokeWidth={1.7} />
               <span>{label}</span>
               {key === "library" && count > 0 && <span className="nav-count">{count}</span>}
+              {key === "private" && shortcuts.length > 0 && <span className="nav-count">{shortcuts.length}</span>}
               {key === "updates" && watchedReleaseCount > 0 && <span className="nav-count">{watchedReleaseCount}</span>}
               {key === "downloads" && (activeTransfers.active + activeTransfers.queued) > 0 &&
                 <span className="nav-count">{activeTransfers.active + activeTransfers.queued}</span>}
             </button>
           ))}
         </nav>
-        <button type="button" className="sidebar-add" onClick={() => { setAdding(true); setView("library"); }}>
-          <Plus size={17} /> Add custom app
+        <button type="button" className="sidebar-add" disabled={shortcuts.length >= 100}
+          title={shortcuts.length >= 100 ? "100 shortcut limit reached" : "Add to Libreria privata"}
+          onClick={() => { setAdding(true); setView("private"); }}>
+          <Plus size={17} /> Add private shortcut
         </button>
         <div className="sidebar-bottom">
           <div className="sidebar-line" />
@@ -701,12 +729,12 @@ export default function App() {
 
         {view === "library" && (
           <>
-            <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved software, GitHub projects and shortcuts.</p></div>
+            <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved catalog software and GitHub projects.</p></div>
               <div className="github-header-actions">
-                <button className="outline-button" type="button" onClick={() => setAddingGithub(true)}><Plus size={17}/> Add GitHub project</button>
-                <button className="black-button" type="button" onClick={() => setAdding(true)}><Plus size={17}/> Add shortcut</button>
+                <button className="outline-button" type="button" onClick={() => setView("private")}><FolderOpen size={17}/> Libreria privata</button>
+                <button className="black-button" type="button" onClick={() => setAddingGithub(true)}><Plus size={17}/> Add GitHub project</button>
               </div></header>
-            {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover, add a GitHub repository or add a shortcut.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
+            {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover or add a GitHub repository. Personal shortcuts are in Libreria privata.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
             {saved.length > 0 && <section className="library-section"><div className="list-heading"><h2>Saved from Discover</h2><span>{saved.length}</span></div><div className="software-list">
               {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Saved from catalog</small></div><InstallButton app={app} small /><DownloadButton app={app} small /><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
             </div></section>}
@@ -723,10 +751,38 @@ export default function App() {
                 </article>)}
               </div>
             </section>}
+            <div className="footnote"><Info size={15}/><span>Saved library entries are not a confirmed list of installed applications. Data stays on this device.</span></div>
+          </>
+        )}
+
+        {view === "private" && (
+          <>
+            <header className="page-header page-header-inline">
+              <div><p className="eyebrow">PERSONAL WORKSPACE</p><h1>Libreria privata.</h1>
+                <p className="subheading">I tuoi shortcut personali, separati dal catalogo pubblico.</p></div>
+              <button type="button" className="black-button" disabled={shortcuts.length >= 100}
+                onClick={() => { setFormError(""); setAdding(true); }}>
+                <Plus size={17}/> Aggiungi shortcut
+              </button>
+            </header>
+            <div className="private-library-summary">
+              <span><FolderOpen size={16}/> Shortcut salvati localmente</span>
+              <strong>{shortcuts.length} / 100</strong>
+            </div>
+            {shortcuts.length > 100 && <p className="scan-warning">Hai più di 100 shortcut salvati prima del limite. Sono tutti conservati: per aggiungerne altri devi scendere sotto 100.</p>}
+            {shortcuts.length === 0 && <div className="feature-empty">
+              <div className="feature-symbol"><FolderOpen size={31}/></div>
+              <h2>La libreria privata è vuota</h2>
+              <p>Aggiungi link ai tuoi siti e percorsi locali. Tutto resta in questo profilo sul dispositivo.</p>
+              <button type="button" className="outline-button" onClick={() => setAdding(true)}>
+                <Plus size={16}/> Aggiungi il primo shortcut
+              </button>
+            </div>}
             {shortcuts.length > 0 && <section className="library-section"><div className="list-heading"><h2>Custom shortcuts</h2><span>{shortcuts.length}</span></div><div className="software-list">
               {shortcuts.map(item => <article className="compact-row" key={item.id}><span className="shortcut-icon">{item.kind === "url" ? <Link2 size={23}/> : <FolderOpen size={23}/>}</span><div className="compact-info"><strong>{item.name}</strong><small title={item.target}>{item.target}</small></div><button type="button" className="outline-button" onClick={() => openShortcut(item)}>{item.kind === "url" ? "Open link" : "Open file"} <ExternalLink size={15}/></button><button type="button" className="icon-action" title="Remove shortcut" aria-label={`Remove ${item.name}`} onClick={() => setShortcuts(xs => xs.filter(x => x.id !== item.id))}><Trash2 size={17}/></button></article>)}
             </div></section>}
-            <div className="footnote"><Info size={15}/><span>Saved library entries are not a confirmed list of installed applications. Data stays on this device.</span></div>
+
+            <div className="footnote"><Info size={15}/><span>Privata significa salvata localmente nel profilo di questa applicazione: non è una cartella cifrata o protetta da password. Gli shortcut preesistenti sono mantenuti.</span></div>
           </>
         )}
 
@@ -847,6 +903,14 @@ export default function App() {
                         </div>}
                       {active && !hasProgress && <div className="transfer-indeterminate" role="status">System package manager is running. An administrator prompt may appear.</div>}
                       {task.filePath && <p className="transfer-detail" title={task.filePath}>Saved to: {task.filePath}</p>}
+                      {task.status === "completed" && task.kind === "download" && task.filePath &&
+                        <button type="button" className="outline-button transfer-retry" onClick={() =>
+                          setPostDownloadPrompts(prompts => [...prompts, {
+                            task, fileName: task.filePath!.split(/[\\/]/).pop() ?? task.appName,
+                            savedPath: task.filePath!, checksumVerified: task.message?.includes("SHA-256") ?? false,
+                          }])}>
+                          <Package size={15}/> Installa / Apri file
+                        </button>}
                       {task.message && <p className="transfer-detail">{task.message}</p>}
                       {task.status === "failed" && app && <button type="button" className="outline-button transfer-retry"
                         onClick={() => { void (task.kind === "download" ? directDownload(app) : requestInstallation(app)); }}>
@@ -960,6 +1024,44 @@ export default function App() {
         )}
       </main>
 
+      {currentPostDownload && <div className="modal-backdrop" role="presentation">
+        <div className="modal install-modal" role="dialog" aria-modal="true" aria-labelledby="after-download-title">
+          <header>
+            <div><p className="eyebrow">DOWNLOAD COMPLETATO</p>
+              <h2 id="after-download-title">Installare {currentPostDownload.task.appName}?</h2>
+            </div>
+            <button type="button" className="icon-action" aria-label="Chiudi" onClick={advancePostDownload}><X size={19}/></button>
+          </header>
+          <div className="install-details">
+            <div><span>File</span><strong>{currentPostDownload.fileName}</strong></div>
+            <div><span>Versione scaricata</span><strong>{currentPostDownload.task.targetVersion}</strong></div>
+            <div><span>Integrità</span><strong>{currentPostDownload.checksumVerified ? "SHA-256 verificato rispetto alla fonte" : "Firma/checksum del produttore non verificati"}</strong></div>
+          </div>
+          <p className="install-explanation">
+            Il download è terminato, ma il software non è installato.
+            {currentPostDownload.task.githubRepo
+              ? " Questo pacchetto proviene da un repository GitHub aggiunto da te. Verifica il produttore e installalo manualmente: Creative Hub non esegue installer GitHub non approvati."
+              : installableIds.has(currentPostDownload.task.appId)
+                ? " Puoi avviare l'installazione dal canale di sistema ufficiale. L'installatore può scaricare di nuovo il pacchetto e richiedere la password Fedora o l'autorizzazione Windows."
+                : " Apri la cartella Download e segui la procedura del produttore. Nessun file verrà eseguito automaticamente."}
+          </p>
+          <div className="modal-actions">
+            <button type="button" className="outline-button" onClick={advancePostDownload}>Non ora</button>
+            <button type="button" className="outline-button" onClick={() => {advancePostDownload();void openDownloadsDirectory();}}>
+              <FolderOpen size={16}/> Apri cartella Download
+            </button>
+            {!currentPostDownload.task.githubRepo && installableIds.has(currentPostDownload.task.appId) && catalog.some(a => a.id === currentPostDownload.task.appId) &&
+              <button type="button" className="black-button" onClick={() => {
+                const app = catalog.find(a => a.id === currentPostDownload.task.appId);
+                advancePostDownload();
+                if (app) void requestInstallation(app);
+              }}>
+                <Check size={16}/> Installa con autorizzazione OS
+              </button>}
+          </div>
+        </div>
+      </div>}
+
       {installPlan && <div className="modal-backdrop">
         <div className="modal install-modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
           <header>
@@ -1025,14 +1127,14 @@ export default function App() {
 
       {adding && <div className="modal-backdrop" role="presentation" onMouseDown={e => {if(e.currentTarget === e.target) setAdding(false);}}>
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-          <header><div><p className="eyebrow">MY LIBRARY</p><h2 id="modal-title">Add shortcut</h2></div><button type="button" className="icon-action" aria-label="Close" onClick={() => {setAdding(false);setFormError("");}}><X size={20}/></button></header>
+          <header><div><p className="eyebrow">LIBRERIA PRIVATA</p><h2 id="modal-title">Aggiungi shortcut</h2></div><button type="button" className="icon-action" aria-label="Close" onClick={() => {setAdding(false);setFormError("");}}><X size={20}/></button></header>
           <form onSubmit={saveShortcut}>
             <label className="form-label">Name<input autoFocus maxLength={80} placeholder="My creative app" value={draft.name} onChange={e => setDraft({...draft,name:e.target.value})}/></label>
             <div className="form-label">Type<div className="segmented"><button className={draft.kind === "url" ? "chosen" : ""} type="button" onClick={() => {setDraft({...draft,kind:"url",target:""});setFormError("");}}><Link2 size={16}/> Website</button><button className={draft.kind === "path" ? "chosen" : ""} type="button" onClick={() => {setDraft({...draft,kind:"path",target:""});setFormError("");}}><FolderOpen size={16}/> Local file</button></div></div>
             <label className="form-label">Target<div className="form-input-row"><input value={draft.target} onChange={e => setDraft({...draft,target:e.target.value})} placeholder={draft.kind === "url" ? "https://example.org" : "Path to your application"}/>{draft.kind === "path" && <button type="button" className="browse-button" onClick={browsePath}>Browse</button>}</div></label>
-            <p className="form-help">Shortcuts are saved locally. Opening local paths requires the desktop application.</p>
+            <p className="form-help">Shortcut: {shortcuts.length} di 100. Gli shortcut sono locali, non cifrati. L'apertura dei file richiede l'app desktop.</p>
             {formError && <p className="form-error" role="alert">{formError}</p>}
-            <div className="modal-actions"><button type="button" className="outline-button" onClick={() => setAdding(false)}>Cancel</button><button type="submit" className="black-button"><Check size={16}/> Save shortcut</button></div>
+            <div className="modal-actions"><button type="button" className="outline-button" onClick={() => setAdding(false)}>Cancel</button><button type="submit" className="black-button" disabled={shortcuts.length >= 100}><Check size={16}/> Salva shortcut</button></div>
           </form>
         </div>
       </div>}

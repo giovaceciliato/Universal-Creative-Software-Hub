@@ -115,3 +115,11 @@ A user can find Blender or Krita, open its official download page, add a locally
 - [ ] Checks for latest non-stable/prerelease GitHub channels
 - [ ] Package-manager aware upgrades for user-tracked apps
 - [ ] True download pause/resume and cancellation
+
+## Private library / downloads follow-up
+- [x] Separate Libreria privata with existing shortcuts intact
+- [x] Enforce 100-new-shortcut cap without deleting legacy over-cap data
+- [x] Add post-download choice and explicit OS installer confirmation for reviewed apps
+- [x] Offer a manual Downloads-folder handoff for unapproved GitHub release files
+- [ ] Optional password-protected / encrypted private library storage
+- [ ] Install exact downloaded archive only after independently verifying provider signatures and OS compatibility

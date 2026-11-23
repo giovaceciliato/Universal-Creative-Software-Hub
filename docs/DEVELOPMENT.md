@@ -108,3 +108,15 @@ Run the Rust unit tests to validate URL and asset-path checks, followed
 by frontend/catalog CI and native Fedora/Windows/macOS builds. Do not
 represent a downloaded package as installed or a differing GitHub tag
 as a verified software update.
+
+## Private shortcuts + installation prompt
+
+The shortcut storage key remains unchanged; `App.tsx` renders its
+contents solely under `view === "private"`. At 100 saved entries,
+additional writes are refused, leaving any legacy over-cap entries
+unchanged.
+
+The post-download confirmation UI queues completion prompts in memory
+for the active session. It does not run arbitrary downloaded installers.
+The safe `get_downloads_directory` native command returns the existing
+OS Downloads folder for manual install handoff.

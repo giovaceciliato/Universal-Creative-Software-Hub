@@ -238,3 +238,35 @@ automatically installed or executed by Creative Hub.
 See [GitHub project tracking and security](docs/GITHUB_PROJECTS.md) for
 exact limitations and how release-based monitoring differs from native
 package-manager upgrades.
+
+## Libreria privata — local shortcuts
+
+**Libreria privata** is now a separate navigation section from **My Library**.
+All existing local website/file shortcuts remain under the same
+`ucsh:shortcuts:v1` storage key, so there is no destructive migration.
+The user may add **up to 100 shortcuts**. If a previous installation
+already stored more than 100, none are deleted: the app simply blocks
+additional entries until the count is below 100.
+
+"Private" here means **locally stored and separated in the UI**, not
+end-to-end encryption, authentication or a password-protected area.
+Other users with access to the same operating-system profile may access
+the app's localStorage.
+
+### After downloading an application
+
+When a native download completes, Creative Hub displays a **post-download
+installation prompt**. For applications with a trusted, reviewed native
+installation path, the user can choose **Install with OS authorization**.
+That launches the existing confirmed package-manager installation flow
+and retains Fedora PolicyKit/Windows UAC authentication. It can use a
+system repository and need a separate download: the launcher never claims
+that a previously saved archive has already been installed.
+
+For GitHub projects added by users, unsupported or unverified packages,
+Creative Hub only offers **Open Downloads folder** for a manual installer
+handoff; it does not automatically execute untrusted MSI/RPM/EXE files.
+The prompt may be dismissed, and the Downloads history offers a way to
+reopen it later.
+
+See [Private shortcuts and install prompt](docs/PRIVATE_LIBRARY.md).
