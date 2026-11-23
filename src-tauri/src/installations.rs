@@ -19,6 +19,42 @@ const CRAFT_IDS: &[&str] = &[
 ];
 static INSTALLING: AtomicBool = AtomicBool::new(false);
 
+// Separately reviewed installation policy, NOT populated by the approved feed.
+// Publisher v0.12.0 README documents Fedora >=36 / glibc >=2.35 and Windows x64.
+// macOS is unsigned/not notarized and not hand-tested upstream: download/manual only.
+fn bimcraft_digest(name: &str) -> Option<&'static str> {
+    match name {
+        "bimcraft-0.12.0-linux-x86_64.rpm" => Some("b7c28b4d62a1360260362e189d63ee96e01077775454b152b3f9453726042425"),
+        "bimcraft-0.12.0-linux-aarch64.rpm" => Some("08aaa6d7b7fdc9a5d9324720ba9ae01d0cc8bedc4e28d34d95efe1586e4a62b4"),
+        "bimcraft-0.12.0-windows-x64.msi" => Some("cbef0b1e9c2fb5496b4b107a2d26ab1ea4d7f95dc45303645b92df5d362bf0e4"),
+        _ => None,
+    }
+}
+
+fn release_repo(app_id: &str) -> Option<String> {
+    if app_id == "bimcraft" { Some("IPedrax/BIMCraft".into()) }
+    else if CRAFT_IDS.contains(&app_id) { Some(format!("storytold/{app_id}")) }
+    else { None }
+}
+
+fn supported_bimcraft(os: &str, arch: &str, os_release: &str) -> bool {
+    match (os, arch) {
+        ("windows", "x86_64") => true,
+        ("linux", "x86_64" | "aarch64") => {
+            let fedora = os_release.lines().any(|l| matches!(l.trim(), "ID=fedora" | "ID=\"fedora\""));
+            let version = os_release.lines().find_map(|l| l.strip_prefix("VERSION_ID="))
+                .and_then(|v| v.trim_matches('"').parse::<u32>().ok());
+            fedora && version.is_some_and(|v| v >= 36)
+        }
+        _ => false,
+    }
+}
+
+fn bimcraft_supported_here() -> bool {
+    supported_bimcraft(std::env::consts::OS, std::env::consts::ARCH,
+        &std::fs::read_to_string("/etc/os-release").unwrap_or_default())
+}
+
 /**
  * Curated Fedora 45 RPM names verified against packages.fedoraproject.org.
  * The catalog JSON is NOT an executable command registry; unknown package
@@ -63,6 +99,7 @@ pub fn installable_app_ids() -> Vec<String> {
     if std::env::consts::OS == "linux" && is_fedora() {
         ids.extend(FEDORA_PACKAGES.iter().map(|&(id, _)| id.to_string()));
     }
+    if bimcraft_supported_here() { ids.push("bimcraft".into()); }
     ids
 }
 
@@ -176,7 +213,10 @@ fn client() -> Result<Client, String> {
 }
 
 fn verified_asset(repo: &str, release: &str, asset: &GitHubAsset) -> bool {
-    let expected_prefix = format!("https://github.com/storytold/{repo}/releases/download/{release}/");
+    let Some(source) = release_repo(repo) else { return false };
+    if repo == "bimcraft" && (release != "v0.12.0"
+        || (asset.name != "SHA256SUMS" && bimcraft_digest(&asset.name).is_none())) { return false; }
+    let expected_prefix = format!("https://github.com/{source}/releases/download/{release}/");
     asset.browser_download_url == format!("{expected_prefix}{}", asset.name)
         && asset.size > 0
         && asset.size <= 2_147_483_648
@@ -233,27 +273,34 @@ fn plan_for(app_id: &str) -> Result<ProposedInstall, String> {
                 "Fedora uses its configured package repositories and will request administrator authorization through PolicyKit.".to_string(),
                 InstallStrategy::FedoraPackage(package),
             )
-        } else if CRAFT_IDS.contains(&app_id) {
+        } else if let Some(repo) = release_repo(app_id) {
+            if app_id == "bimcraft" && !bimcraft_supported_here() {
+                return Err("BIMCraft guided installation requires Fedora 36+ (x86_64/aarch64) or Windows x64. Use the official download and manual instructions on other systems.".into());
+            }
             if std::env::consts::OS == "linux" && !is_fedora() {
                 return Err("This RPM installer currently supports Fedora. Use the official release page elsewhere.".into());
             }
             let suffix = asset_suffix()?;
             let http = client()?;
-            let request = format!("https://api.github.com/repos/storytold/{app_id}/releases/latest");
+            let request = format!("https://api.github.com/repos/{repo}/releases/latest");
             let release: GitHubRelease = http.get(&request).send()
                 .and_then(|r| r.error_for_status())
-                .map_err(|e| format!("Could not look up the ArtCraft release: {e}"))?
+                .map_err(|e| format!("Could not look up the publisher release: {e}"))?
                 .json()
                 .map_err(|e| format!("Invalid release metadata: {e}"))?;
             if !valid_release_token(&release.tag_name) {
                 return Err("Publisher returned an unexpected release identifier.".into());
+            }
+            if app_id == "bimcraft" && release.tag_name != "v0.12.0" {
+                return Err("This BIMCraft release has not been reviewed for guided installation. Use Download and follow the publisher's manual instructions.".into());
             }
             let artifact = release.assets.iter().find(|a| {
                 a.name.starts_with(&format!("{app_id}-"))
                     && a.name.ends_with(suffix)
                     && verified_asset(app_id, &release.tag_name, a)
             }).cloned().ok_or_else(|| format!("No official {suffix} package was found for this app."))?;
-            let checksums = release.assets.iter().find(|a| a.name == "SHA256SUMS.txt"
+            let manifest = if app_id == "bimcraft" { "SHA256SUMS" } else { "SHA256SUMS.txt" };
+            let checksums = release.assets.iter().find(|a| a.name == manifest
                 && verified_asset(app_id, &release.tag_name, a))
                 .cloned().ok_or("Release does not provide a trusted checksum manifest.")?;
             let method = match std::env::consts::OS {
@@ -263,17 +310,20 @@ fn plan_for(app_id: &str) -> Result<ProposedInstall, String> {
                 _ => unreachable!(),
             };
             let manual = std::env::consts::OS == "macos";
-            let message = if manual {
+            let mut message = if manual {
                 "The verified DMG will open in Finder. Move the .app into Applications to finish.".to_string()
             } else if std::env::consts::OS == "linux" {
                 "The RPM will be checksum-verified before Fedora requests your administrator password.".to_string()
             } else {
                 "The MSI will be checksum-verified and opened in Windows Installer. UAC may request permission.".to_string()
             };
+            if app_id == "bimcraft" {
+                message.push_str(" Only reviewed v0.12.0 bytes are accepted. SHA-256 verifies integrity, not a publisher signature; the Windows installer is not code-signed. No system security checks are bypassed.");
+            }
             (
                 release.tag_name.clone(),
                 method.into(),
-                format!("https://github.com/storytold/{app_id}/releases/tag/{}", release.tag_name),
+                format!("https://github.com/{repo}/releases/tag/{}", release.tag_name),
                 !manual,
                 manual,
                 Some(artifact.size),
@@ -324,13 +374,18 @@ fn stage_craft_package(
         return Err("Package URL does not match its verified publisher release.".into());
     }
     let client = client()?;
-    let checksums_body = client.get(&checksums.browser_download_url).send()
+    let response = client.get(&checksums.browser_download_url).send()
         .and_then(|r| r.error_for_status())
-        .map_err(|e| format!("Could not obtain publisher checksums: {e}"))?
-        .text().map_err(|e| format!("Invalid checksums response: {e}"))?;
+        .map_err(|e| format!("Could not obtain publisher checksums: {e}"))?;
+    let mut checksums_body = String::new();
+    response.take(512_001).read_to_string(&mut checksums_body)
+        .map_err(|e| format!("Invalid checksums response: {e}"))?;
     if checksums_body.len() > 512_000 { return Err("Checksum manifest exceeded permitted size.".into()); }
     let expected = parse_checksum(&checksums_body, &artifact.name)
         .ok_or("Publisher checksum for this installer was not found.")?;
+    if app_id == "bimcraft" && bimcraft_digest(&artifact.name) != Some(expected.as_str()) {
+        return Err("BIMCraft checksum differs from the separately reviewed installer. Use the official download for manual review.".into());
+    }
     let temp_dir = std::env::temp_dir();
     let extension = if artifact.name.ends_with(".rpm") { ".rpm" }
         else if artifact.name.ends_with(".msi") { ".msi" }
@@ -464,6 +519,31 @@ pub async fn install_app(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn bimcraft_install_is_a_separate_pinned_policy() {
+        assert_eq!(release_repo("bimcraft").as_deref(), Some("IPedrax/BIMCraft"));
+        assert!(release_repo("approved-but-unreviewed").is_none());
+        assert!(bimcraft_digest("bimcraft-0.13.0-linux-x86_64.rpm").is_none());
+        let mut asset = GitHubAsset {
+            name: "bimcraft-0.12.0-linux-x86_64.rpm".into(), size: 100,
+            browser_download_url: "https://github.com/IPedrax/BIMCraft/releases/download/v0.12.0/bimcraft-0.12.0-linux-x86_64.rpm".into(),
+        };
+        assert!(verified_asset("bimcraft", "v0.12.0", &asset));
+        assert!(!verified_asset("bimcraft", "v0.13.0", &asset));
+        asset.browser_download_url = asset.browser_download_url.replace("IPedrax", "attacker");
+        assert!(!verified_asset("bimcraft", "v0.12.0", &asset));
+    }
+    #[test]
+    fn bimcraft_install_requires_reviewed_host() {
+        assert!(supported_bimcraft("linux", "x86_64", "ID=fedora\nVERSION_ID=45\n"));
+        assert!(supported_bimcraft("linux", "aarch64", "ID=\"fedora\"\nVERSION_ID=\"36\""));
+        assert!(!supported_bimcraft("linux", "x86_64", "ID=fedora\nVERSION_ID=35"));
+        assert!(!supported_bimcraft("linux", "x86_64", "ID=ubuntu\nVERSION_ID=45"));
+        assert!(!supported_bimcraft("linux", "riscv64", "ID=fedora\nVERSION_ID=45"));
+        assert!(supported_bimcraft("windows", "x86_64", ""));
+        assert!(!supported_bimcraft("windows", "aarch64", ""));
+        assert!(!supported_bimcraft("macos", "aarch64", ""));
+    }
     #[test]
     fn only_curated_apps_can_be_installed() {
         assert!(CRAFT_IDS.contains(&"photocraft"));

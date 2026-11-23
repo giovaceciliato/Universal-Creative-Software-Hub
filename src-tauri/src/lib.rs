@@ -65,6 +65,11 @@ async fn inspect_github_project(url: String) -> Result<github_projects::ProjectI
 }
 
 #[tauri::command]
+async fn resolve_catalog_download(repo: String) -> Result<Option<github_projects::CatalogDownloadOffer>, String> {
+    github_projects::resolve_catalog_download(repo).await
+}
+
+#[tauri::command]
 async fn check_github_release(repo: String) -> Result<Option<github_projects::ReleaseInfo>, String> {
     github_projects::check_github_release(repo).await
 }
@@ -102,6 +107,7 @@ pub fn run() {
             refresh_artcraft_catalog,
             inspect_github_project,
             check_github_release,
+            resolve_catalog_download,
             download_github_asset,
             check_app_request,
             refresh_approved_apps,

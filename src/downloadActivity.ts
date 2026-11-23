@@ -15,7 +15,7 @@ export interface TransferTask {
   createdAt: number;
   filePath?: string;
   checksumVerified?: boolean;
-  /** GitHub release downloads are non-executable, user-selected release assets. */
+  /** Download source only; a GitHub asset never grants installation authority. */
   githubRepo?: string;
   githubAssetId?: number;
   message?: string;

@@ -9,6 +9,8 @@ import {
   Search, Settings2, Trash2, X,
 } from "lucide-react";
 import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } from "./catalog";
+import approvedSnapshot from "../catalog/approved-community.json";
+import { catalogDownloadRepo, canOfferCatalogInstall } from "./catalogDownloads";
 import featured50 from "../catalog/collections/creative-top-50.json";
 import { loadTransferHistory, saveTransferHistory, formatBytes, transferCounts, type TransferTask } from "./downloadActivity";
 import { loadGithubProjects, saveGithubProjects, githubReleaseStatus, type GitHubProjectInfo, type GitHubRelease, type GitHubAsset, type WatchedGitHubProject } from "./githubTracking";
@@ -124,7 +126,7 @@ export default function App() {
   const [requestErrors, setRequestErrors] = useState("");
   const [requestChecking, setRequestChecking] = useState(false);
   const [requestCheck, setRequestCheck] = useState<{ signature: string; matches: AppRequestMatch[]; truncated: boolean } | null>(null);
-  const [approvedApps, setApprovedApps] = useState<CatalogApp[]>([]);
+  const [approvedApps, setApprovedApps] = useState<CatalogApp[]>(approvedSnapshot.apps as CatalogApp[]);
   const [approvedStatus, setApprovedStatus] = useState<"loading" | "verified" | "offline">("offline");
   const [approvedError, setApprovedError] = useState("");
   const approvedRefreshStarted = useRef(false);
@@ -149,6 +151,8 @@ export default function App() {
   const [scanReport, setScanReport] = useState<ScanReport | null>(null);
   const [scanning, setScanning] = useState(false);
   const [downloadOffers, setDownloadOffers] = useState<DownloadOffer[]>([]);
+  const resolvingDownloads = useRef(new Set<string>());
+  const [resolvingIds, setResolvingIds] = useState<Set<string>>(new Set());
   const [completedDownloads, setCompletedDownloads] = useState<Record<string, DownloadResult>>({});
   const [transfers, setTransfers] = useState<TransferTask[]>(loadTransferHistory);
   const [postDownloadPrompts, setPostDownloadPrompts] = useState<PostDownloadPrompt[]>([]);
@@ -563,23 +567,49 @@ export default function App() {
   }
 
   async function directDownload(app: CatalogApp) {
-    const offer = downloadOffers.find(item => item.appId === app.id);
-    if (!native || !offer) {
-      await openWebsite(app.links.download);
-      return;
-    }
+    if (resolvingDownloads.current.has(app.id)) return;
     if (transfers.some(t => t.appId === app.id && t.kind === "download" &&
       (t.status === "queued" || t.status === "downloading"))) {
       setView("downloads");
       return;
     }
-    setTransfers(xs => [{
-      id: crypto.randomUUID(), appId: app.id, appName: app.name,
-      kind: "download" as const, targetVersion: offer.version,
-      installedVersion: scanReport?.matches.find(m => m.appId === app.id && m.installedVersion)?.installedVersion,
-      status: "queued" as const, received: 0, total: offer.sizeBytes, createdAt: Date.now(),
-    }, ...xs].slice(0, 100));
-    setView("downloads");
+    resolvingDownloads.current.add(app.id);
+    setResolvingIds(new Set(resolvingDownloads.current));
+    try {
+      const offer = downloadOffers.find(item => item.appId === app.id);
+      let release: { repo: string; version: string; asset: GitHubAsset } | null = null;
+      let reason = "No unambiguous compatible release asset with SHA-256 is available.";
+      const repo = catalogDownloadRepo(app);
+      if (native && !offer && repo) {
+        try {
+          release = await invoke("resolve_catalog_download", { repo });
+        } catch (error) {
+          reason = `Release lookup unavailable: ${String(error)}`;
+        }
+      }
+      if (!native || (!offer && !release)) {
+        await openWebsite(app.links.download);
+        setTransfers(xs => [{
+          id: crypto.randomUUID(), appId: app.id, appName: app.name, kind: "download" as const,
+          targetVersion: "Not determined", status: "manual" as const,
+          received: 0, total: 0, createdAt: Date.now(),
+          message: `${native ? reason : "Browser download."} Official source: ${app.links.download}. Download and install manually following the publisher's instructions. External progress and completion cannot be tracked.`,
+        }, ...xs].slice(0, 100));
+        setView("downloads");
+        return;
+      }
+      setTransfers(xs => [{
+        id: crypto.randomUUID(), appId: app.id, appName: app.name,
+        kind: "download" as const, targetVersion: release?.version ?? offer!.version,
+        githubRepo: release?.repo, githubAssetId: release?.asset.id,
+        installedVersion: scanReport?.matches.find(m => m.appId === app.id && m.installedVersion)?.installedVersion,
+        status: "queued" as const, received: 0, total: release?.asset.sizeBytes ?? offer!.sizeBytes, createdAt: Date.now(),
+      }, ...xs].slice(0, 100));
+      setView("downloads");
+    } finally {
+      resolvingDownloads.current.delete(app.id);
+      setResolvingIds(new Set(resolvingDownloads.current));
+    }
   }
 
   function DownloadButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
@@ -587,16 +617,16 @@ export default function App() {
     const job = transfers.find(t => t.appId === app.id && t.kind === "download" &&
       (t.status === "queued" || t.status === "downloading"));
     const done = completedDownloads[app.id];
-    const label = job?.status === "downloading"
+    const label = resolvingIds.has(app.id) ? "Checking release..." : job?.status === "downloading"
       ? `Downloading ${Math.min(100, Math.round(100 * job.received / Math.max(1, job.total)))}%`
       : job?.status === "queued" ? "Queued"
       : done ? "Downloaded"
       : offer ? `Download ${small ? "" : offer.version}`.trim()
-      : app.platforms.length === 1 && app.platforms[0] === "web" ? "Open web app" : "Official page";
+      : "Download";
     return <button
       type="button"
       className="outline-button"
-      disabled={Boolean(job)}
+      disabled={Boolean(job) || resolvingIds.has(app.id)}
       aria-label={`${label} ${app.name}`}
       title={offer ? `Save ${offer.fileName} to your Downloads folder (${Math.round(offer.sizeBytes / 1024 / 1024)} MiB)` : "Open official publisher downloads"}
       onClick={() => { void directDownload(app); }}
@@ -618,8 +648,8 @@ export default function App() {
         })
       : invoke<DownloadResult>("download_app", { appId: next.appId });
     void promise.then(result => {
-        if (!next.githubRepo) setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
-        if (next.githubRepo) setGithubProjects(xs => xs.map(p => p.repo === next.githubRepo
+        if (!next.appId.startsWith("github:")) setCompletedDownloads(xs => ({ ...xs, [next.appId]: result }));
+        if (next.appId.startsWith("github:")) setGithubProjects(xs => xs.map(p => p.repo === next.githubRepo
           ? { ...p, downloadedTag: next.targetVersion } : p));
         setPostDownloadPrompts(prompts => [...prompts, {
           task: next, fileName: result.fileName, savedPath: result.savedPath,
@@ -773,7 +803,7 @@ export default function App() {
                   : approvedStatus === "loading" ? "Controllo approvazioni..."
                   : "Catalogo integrato disponibile"}
                 </span>
-                {approvedError && <small>Catalogo approvato online non disponibile: rimangono le app già integrate.</small>}
+                {approvedError && <small>Catalogo approvato online non disponibile: rimane disponibile il catalogo incluso nell’app.</small>}
               </div>
               <button className="outline-button" type="button"
                 disabled={!native || approvedStatus === "loading"} onClick={() => { void refreshApproved(); }}>
@@ -978,7 +1008,7 @@ export default function App() {
                     queued: "Waiting in queue", downloading: "Downloading",
                     installing: hasProgress && percent >= 100 ? "Waiting for OS installer" : "Installing / downloading",
                     completed: task.kind === "download" ? "Downloaded" : "Install command completed",
-                    manual: "Finish installation manually", failed: "Failed", interrupted: "Previous session interrupted",
+                    manual: "Manual action required", failed: "Failed", interrupted: "Previous session interrupted",
                   };
                   return <article className="transfer-row" key={task.id}>
                     {app ? <AppIcon app={app} /> : <div className="shortcut-icon"><Package size={23}/></div>}
@@ -1013,6 +1043,10 @@ export default function App() {
                           <Package size={15}/> Installa / Apri file
                         </button>}
                       {task.message && <p className="transfer-detail">{task.message}</p>}
+                      {task.status === "manual" && app && <button type="button" className="outline-button transfer-retry"
+                        onClick={() => { void openWebsite(app.links.download); }}>
+                        Official download / instructions <ExternalLink size={14}/>
+                      </button>}
                       {task.status === "failed" && app && <button type="button" className="outline-button transfer-retry"
                         onClick={() => { void (task.kind === "download" ? directDownload(app) : requestInstallation(app)); }}>
                         Retry <RefreshCw size={14}/>
@@ -1140,18 +1174,25 @@ export default function App() {
           </div>
           <p className="install-explanation">
             Il download è terminato, ma il software non è installato.
-            {currentPostDownload.task.githubRepo
-              ? " Questo pacchetto proviene da un repository GitHub aggiunto da te. Verifica il produttore e installalo manualmente: Creative Hub non esegue installer GitHub non approvati."
-              : installableIds.has(currentPostDownload.task.appId)
-                ? " Puoi avviare l'installazione dal canale di sistema ufficiale. L'installatore può scaricare di nuovo il pacchetto e richiedere la password Fedora o l'autorizzazione Windows."
+            {currentPostDownload.task.appId.startsWith("github:")
+              ? " Questo pacchetto proviene da un repository GitHub aggiunto da te. Verifica il produttore e installalo manualmente: Creative Hub non esegue questi file. L’approvazione nel catalogo non autorizza un installer."
+              : canOfferCatalogInstall(currentPostDownload.task.appId, installableIds)
+                ? " È disponibile un metodo di installazione verificato separatamente. Prima di procedere vedrai fonte e versione da confermare. L'installatore può scaricare di nuovo il pacchetto e richiedere la password Fedora o l'autorizzazione Windows."
                 : " Apri la cartella Download e segui la procedura del produttore. Nessun file verrà eseguito automaticamente."}
+            {currentPostDownload.task.appId === "bimcraft" && !installableIds.has("bimcraft") &&
+              " BIMCraft: su macOS apri il DMG e trascina l’app in Applications; la release non è notarizzata. Su Linux usa il formato previsto dalla tua distribuzione. Consulta le istruzioni ufficiali prima di procedere."}
           </p>
           <div className="modal-actions">
             <button type="button" className="outline-button" onClick={advancePostDownload}>Non ora</button>
             <button type="button" className="outline-button" onClick={() => {advancePostDownload();void openDownloadsDirectory();}}>
               <FolderOpen size={16}/> Apri cartella Download
             </button>
-            {!currentPostDownload.task.githubRepo && installableIds.has(currentPostDownload.task.appId) && catalog.some(a => a.id === currentPostDownload.task.appId) &&
+            {catalog.find(a => a.id === currentPostDownload.task.appId) &&
+              <button type="button" className="outline-button" onClick={() => {
+                const app = catalog.find(a => a.id === currentPostDownload.task.appId);
+                if (app) void openWebsite(app.links.download);
+              }}>Istruzioni ufficiali <ExternalLink size={15}/></button>}
+            {canOfferCatalogInstall(currentPostDownload.task.appId, installableIds) && catalog.some(a => a.id === currentPostDownload.task.appId) &&
               <button type="button" className="black-button" onClick={() => {
                 const app = catalog.find(a => a.id === currentPostDownload.task.appId);
                 advancePostDownload();
