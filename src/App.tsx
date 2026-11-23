@@ -544,7 +544,7 @@ export default function App() {
         }]);
         setTransfers(xs => xs.map(x => x.id === next.id ? {
           ...x, status: "completed" as const, received: x.total,
-          filePath: result.savedPath,
+          filePath: result.savedPath, checksumVerified: result.checksumVerified,
           message: result.checksumVerified
             ? "SHA-256 matched the publisher's release metadata. Downloaded, not installed."
             : "Downloaded only; no trusted SHA-256 digest was supplied. Verify provenance before opening.",
@@ -907,7 +907,7 @@ export default function App() {
                         <button type="button" className="outline-button transfer-retry" onClick={() =>
                           setPostDownloadPrompts(prompts => [...prompts, {
                             task, fileName: task.filePath!.split(/[\\/]/).pop() ?? task.appName,
-                            savedPath: task.filePath!, checksumVerified: task.message?.includes("SHA-256") ?? false,
+                            savedPath: task.filePath!, checksumVerified: task.checksumVerified === true,
                           }])}>
                           <Package size={15}/> Installa / Apri file
                         </button>}
