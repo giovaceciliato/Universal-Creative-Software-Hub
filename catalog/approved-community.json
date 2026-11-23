@@ -1,3 +1,25 @@
 {
-  "apps": []
+  "apps": [
+    {
+      "id": "bimcraft",
+      "name": "BIMCraft",
+      "publisher": "IPedrax",
+      "description": "BIM program",
+      "categories": [
+        "community"
+      ],
+      "platforms": [
+        "linux",
+        "windows",
+        "macos",
+        "web"
+      ],
+      "pricingModel": "free-open-source",
+      "links": {
+        "website": "https://getcadcraft.com/apps/bimcraft",
+        "download": "https://github.com/IPedrax/BIMCraft/releases/latest",
+        "sourceCode": "https://github.com/IPedrax/BIMCraft"
+      }
+    }
+  ]
 }
