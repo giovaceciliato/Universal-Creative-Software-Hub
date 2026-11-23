@@ -336,7 +336,7 @@ fn execute_install(app_id: &str, expected_version: &str, app: AppHandle) -> Resu
             if !Path::new("/usr/bin/dnf").is_file() {
                 return Err("Fedora DNF was not found at /usr/bin/dnf.".into());
             }
-            let mut cmd = Command::new("pkexec");
+            let mut cmd = Command::new("/usr/bin/pkexec");
             cmd.arg("/usr/bin/dnf").args(["install", "-y", package]);
             command_status(cmd, "Fedora DNF/PolicyKit")?;
             "installed"
@@ -361,7 +361,7 @@ fn execute_install(app_id: &str, expected_version: &str, app: AppHandle) -> Resu
             let staged = stage_craft_package(&app_id, &release, &artifact, &checksums, &app)?;
             match std::env::consts::OS {
                 "linux" => {
-                    let mut cmd = Command::new("pkexec");
+                    let mut cmd = Command::new("/usr/bin/pkexec");
                     cmd.arg("/usr/bin/dnf").args(["install", "-y"]).arg(staged.path());
                     command_status(cmd, "Fedora RPM installation")?;
                     "installed"
