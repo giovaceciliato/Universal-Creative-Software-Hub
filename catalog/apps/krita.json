@@ -18,5 +18,36 @@
     "website": "https://krita.org/",
     "download": "https://krita.org/en/download/",
     "sourceCode": "https://invent.kde.org/graphics/krita"
+  },
+  "icon": {
+    "path": "/icons/krita.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "krita.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Krita.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "krita"
+      ],
+      "desktopIds": [
+        "org.kde.krita.desktop"
+      ],
+      "flatpakIds": [
+        "org.kde.krita"
+      ],
+      "rpmNames": [
+        "krita"
+      ]
+    }
   }
 }

@@ -18,5 +18,36 @@
     "website": "https://www.blender.org/",
     "download": "https://www.blender.org/download/",
     "sourceCode": "https://projects.blender.org/blender/blender"
+  },
+  "icon": {
+    "path": "/icons/blender.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "blender.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Blender.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "blender"
+      ],
+      "desktopIds": [
+        "org.blender.Blender.desktop"
+      ],
+      "flatpakIds": [
+        "org.blender.Blender"
+      ],
+      "rpmNames": [
+        "blender"
+      ]
+    }
   }
 }

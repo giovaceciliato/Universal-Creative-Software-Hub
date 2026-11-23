@@ -94,3 +94,13 @@ npm run tauri dev     # native Windows/macOS/Fedora development shell
 The native command generates temporary platform icons from an SVG source before starting Tauri. Install Rust and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) first.
 
 See [Development](docs/DEVELOPMENT.md) for requirements and current limitations. Cross-platform installers are targets and must pass real build/testing checks before release.
+
+## Monochrome UI and native integration contracts
+
+The next UI iteration uses a **white/black minimalist design**, recognizable local SVG marks for Blender and Krita, and clear separation between **saved software**, **installed software**, and **software updates**.
+
+The catalog also includes declarative per-platform identifiers for future native detection and updates. **An identifier is not proof of installation.** No scan is performed, and no updater is executed, until native adapters have been built and verified.
+
+- [UI design](docs/UI_DESIGN.md)
+- [Detection and updates architecture](docs/DETECTION_AND_UPDATES.md)
+- [Third-party icon credits](docs/ICONS.md)
