@@ -71,3 +71,15 @@ A successful OS package command should still be followed by **Scan computer**
 to verify actual installation. Third-party update checks remain unimplemented.
 
 Fedora reference: https://packages.fedoraproject.org/
+
+## Explicit post-download choice
+
+Completed native downloads now show a confirmation dialog. Reviewed
+apps offer an installation via the official OS package manager after
+the user explicitly confirms the plan. The OS authentication agent can
+request a password or show UAC.
+
+Downloaded packages from arbitrary user-supplied GitHub URLs are never
+installed or executed by the launcher. Users can open the Downloads
+folder and continue manually. This prevents a GitHub repository's
+release metadata from becoming an executable-command allowlist.

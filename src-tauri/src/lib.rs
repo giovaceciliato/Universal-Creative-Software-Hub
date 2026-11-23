@@ -5,6 +5,15 @@ mod artcraft_catalog;
 mod github_projects;
 
 #[tauri::command]
+fn get_downloads_directory() -> Result<String, String> {
+    let path = dirs::download_dir().ok_or("Downloads folder not found")?;
+    if !path.is_dir() {
+        return Err("Downloads folder does not exist".into());
+    }
+    Ok(path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
 async fn scan_installed_apps() -> Result<scanner::ScanReport, String> {
     // Keep filesystem/package discovery away from the WebView thread.
     tauri::async_runtime::spawn_blocking(scanner::scan_installed)
@@ -72,6 +81,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            get_downloads_directory,
             scan_installed_apps,
             available_downloads,
             download_app,
