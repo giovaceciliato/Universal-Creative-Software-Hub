@@ -9,6 +9,14 @@ Roadmap items are goals, **not completed features or guaranteed dates**.
 - [ ] Agree on UI structure and visual direction
 - [ ] Select final frontend/desktop stack
 
+## Supported platform targets
+
+- **v0.1 desktop:** Windows, macOS, and Fedora Linux (same catalog and core experience).
+- **Future:** Android, with an adapted interface and Android-compatible software catalog.
+- **Out of scope for v0.1:** Android binaries and support commitments for Linux distributions other than Fedora.
+
+See [PLATFORMS.md](PLATFORMS.md) for planned packages and test criteria.
+
 ## Phase 1 — usable desktop MVP
 - [ ] App shell with Discover and My Library tabs
 - [ ] Load and validate the curated catalog
@@ -16,6 +24,9 @@ Roadmap items are goals, **not completed features or guaranteed dates**.
 - [ ] Manually add executable paths and website shortcuts
 - [ ] Launch saved entries with user confirmation where appropriate
 - [ ] Local favorites and library persistence
+- [ ] Development builds and smoke tests on Windows, macOS, and Fedora
+- [ ] Package launchers as .exe for Windows, .dmg for macOS, and .rpm for Fedora
+- [ ] Verify app launch behavior and official download links on each of those OSs
 
 ## Phase 2 — operating-system integrations
 - [ ] Installed-app detection (platform-specific)
@@ -29,6 +40,14 @@ Roadmap items are goals, **not completed features or guaranteed dates**.
 - [ ] New releases and curated recommendations
 - [ ] Community contribution workflow with automated metadata checks
 - [ ] Publisher verification and safer update provenance
+
+## Phase 4 — Android (future)
+- [ ] Reuse the shared catalog, types, and suitable UI components
+- [ ] Build an Android-first navigation and touch interface
+- [ ] Filter for Android-compatible applications; do not present desktop installers as mobile-compatible
+- [ ] Add Android-specific app discovery and safe hand-off to official distribution channels
+- [ ] Test mobile storage, lifecycle, permissions, and opening installed applications
+- [ ] Package and test APK / Android App Bundle builds
 
 ## Explicitly out of scope for the MVP
 - Hosting copies of third-party installers

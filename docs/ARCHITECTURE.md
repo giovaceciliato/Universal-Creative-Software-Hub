@@ -13,7 +13,8 @@ This is a **design proposal**, not an implemented architecture.
 
 ## Proposed stack
 
-- Desktop: Tauri (Rust)
+- Desktop: Tauri 2 (Rust), targeting Windows, macOS, and Fedora Linux
+- Future Android app: Tauri 2 mobile support with native Android adapters where necessary
 - UI: React and TypeScript
 - Local database: SQLite
 - Initial catalog: repository JSON files in `catalog/apps/`
@@ -30,9 +31,20 @@ The **catalog is metadata**, not executable configuration.
 - Verify installers and updates using publisher/platform signing where supported; checksums alone do not authenticate an unknown publisher.
 - Require explicit confirmation before installation or execution of newly downloaded software.
 - Reject unknown download mirrors and misleading freeware labels.
-- Check compatibility and update channels separately on Windows, Linux, and macOS.
+- Check compatibility and update channels separately on Windows, macOS, and Fedora Linux; add Android separately later.
 - Record whether an update is **managed**, **detected but manual**, or **handled by the app itself**.
 - Keep license terms and trademark usage independent from the hub's MIT license.
+
+## Platform adapter boundaries
+
+A shared manifest describes the creative application; an OS-specific adapter decides what the local device can actually do.
+
+- **Windows:** local executable discovery, Windows-specific shortcuts, and verified installer/package-manager sources.
+- **macOS:** .app bundles, explicit app launching, macOS permissions, and developer signing/notarization for our launcher distribution.
+- **Fedora:** .desktop launcher entries, RPM/DNF and Flatpak integration where supported; portable AppImage handling is a separate design decision.
+- **Android (future):** browse and launch Android-compatible tools using mobile-specific capabilities and approved distribution mechanisms. The desktop discovery/install APIs must not be reused blindly.
+
+App availability, installability, and update capabilities must be reported independently, per platform. A catalog listing alone does not establish platform support.
 
 ## Suggested packages (future)
 

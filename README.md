@@ -43,11 +43,27 @@ The catalog is stored in [`catalog/apps/`](catalog/apps/). Initially, entries li
 - Catalog: versioned JSON manifests, with community contributions through pull requests
 - Update/install adapters: platform-native package managers and publisher-supported channels, introduced incrementally
 
-Windows, Linux, and macOS are target platforms. Platform support will be validated as development progresses.
+### Target platforms
+
+**Initial desktop release: Windows, macOS, and Fedora Linux.** Android is planned for a later release, not for v0.1. These are development targets, not shipping claims.
+
+| OS | Planned distribution | Initial priority |
+| --- | --- | --- |
+| Windows | Windows installer (`.exe`) | v0.1 desktop |
+| macOS | DMG / app bundle | v0.1 desktop |
+| Fedora Linux | RPM; AppImage as a possible portable option | v0.1 desktop |
+| Android | APK / Android App Bundle | Later phase |
+
+Fedora is the primary Linux target for the first release. Other Linux distributions may be supported later but are not a v0.1 commitment.
+
+Core catalog and user-interface code should remain reusable on Android, while OS-specific launching, discovery, installation, updates, and permission handling must be implemented independently. The Android app would feature Android-compatible creative tools; **desktop-only apps such as Blender cannot be assumed to run on Android**.
+
+See [Platform support](docs/PLATFORMS.md) for a more precise target and testing matrix.
 
 ## Project documents
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Platform support](docs/PLATFORMS.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Catalog format](catalog/README.md)
 - [Contributing](CONTRIBUTING.md)
