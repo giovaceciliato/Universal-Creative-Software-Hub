@@ -1,0 +1,46 @@
+{
+  "id": "designcraft",
+  "name": "DesignCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Page layout, typography and print publishing.",
+  "categories": [
+    "publishing",
+    "design"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/designcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "designcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "DesignCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "designcraft"
+      ],
+      "rpmNames": [
+        "designcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/designcraft",
+    "download": "https://github.com/storytold/designcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/designcraft"
+  }
+}

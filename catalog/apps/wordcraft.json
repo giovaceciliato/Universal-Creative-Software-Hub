@@ -1,0 +1,46 @@
+{
+  "id": "wordcraft",
+  "name": "WordCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Word processing and document authoring tools.",
+  "categories": [
+    "writing",
+    "publishing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/wordcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "wordcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "WordCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "wordcraft"
+      ],
+      "rpmNames": [
+        "wordcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/wordcraft",
+    "download": "https://github.com/storytold/wordcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/wordcraft"
+  }
+}

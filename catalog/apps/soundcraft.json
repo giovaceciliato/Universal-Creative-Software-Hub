@@ -1,0 +1,46 @@
+{
+  "id": "soundcraft",
+  "name": "SoundCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Audio recording, editing and mixing.",
+  "categories": [
+    "audio",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/soundcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "soundcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "SoundCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "soundcraft"
+      ],
+      "rpmNames": [
+        "soundcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/soundcraft",
+    "download": "https://github.com/storytold/soundcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/soundcraft"
+  }
+}

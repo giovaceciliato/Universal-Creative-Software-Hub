@@ -1,0 +1,46 @@
+{
+  "id": "gridcraft",
+  "name": "GridCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Spreadsheets and numerical data analysis.",
+  "categories": [
+    "data",
+    "spreadsheets"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/gridcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "gridcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "GridCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "gridcraft"
+      ],
+      "rpmNames": [
+        "gridcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/gridcraft",
+    "download": "https://github.com/storytold/gridcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/gridcraft"
+  }
+}

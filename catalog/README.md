@@ -28,7 +28,7 @@ Each file should conform to [`schema/app.schema.json`](schema/app.schema.json).
 
 ## Icons and native integration hints
 
-Optional `icon` records contain a **local**, checked-in SVG path plus source and license information. The UI uses a neutral fallback if the file is absent or cannot be displayed.
+Optional `icon` records contain a **local**, checked-in SVG or PNG path plus source and license information. The UI uses a neutral fallback if the file is absent or cannot be displayed.
 
 The optional `integrations` object holds platform-scoped **read-only identifiers** for matching a potential local installation:
 
@@ -45,3 +45,10 @@ The optional `integrations` object holds platform-scoped **read-only identifiers
 These identifiers are **not installation commands**. They require validation against an actual package manager or OS inventory before any installed or update status is shown. Review package IDs before submitting them; do not guess.
 
 See [detection and update design](../docs/DETECTION_AND_UPDATES.md).
+
+## Native installation
+
+Manifests remain metadata only. Native installation plans and commands are
+defined in a separate allowlisted Rust module, independent of catalog JSON
+fields. The ArtCraft packages are resolved only from the publisher's curated
+GitHub repositories. See [INSTALLATION.md](../docs/INSTALLATION.md).

@@ -1,0 +1,46 @@
+{
+  "id": "cadcraft",
+  "name": "CADCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Computer-aided design and drafting.",
+  "categories": [
+    "cad",
+    "design"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/cadcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "cadcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "CADCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "cadcraft"
+      ],
+      "rpmNames": [
+        "cadcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/cadcraft",
+    "download": "https://github.com/storytold/cadcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/cadcraft"
+  }
+}

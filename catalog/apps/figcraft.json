@@ -1,0 +1,46 @@
+{
+  "id": "figcraft",
+  "name": "FigCraft",
+  "publisher": "ArtCraft Team",
+  "description": "User interface design, prototyping and components.",
+  "categories": [
+    "ui-design",
+    "prototyping"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/figcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "figcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "FigCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "figcraft"
+      ],
+      "rpmNames": [
+        "figcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/figcraft",
+    "download": "https://github.com/storytold/figcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/figcraft"
+  }
+}

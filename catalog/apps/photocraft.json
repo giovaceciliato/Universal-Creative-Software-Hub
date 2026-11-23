@@ -1,0 +1,46 @@
+{
+  "id": "photocraft",
+  "name": "PhotoCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Raster image editor with layers, masks and PSD file support.",
+  "categories": [
+    "image-editing",
+    "digital-painting"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/photocraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "photocraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "PhotoCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "photocraft"
+      ],
+      "rpmNames": [
+        "photocraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/photocraft",
+    "download": "https://github.com/storytold/photocraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/photocraft"
+  }
+}

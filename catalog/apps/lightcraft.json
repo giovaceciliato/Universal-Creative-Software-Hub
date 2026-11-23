@@ -1,0 +1,46 @@
+{
+  "id": "lightcraft",
+  "name": "LightCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Non-destructive photo library and RAW developing tools.",
+  "categories": [
+    "photography",
+    "raw"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/lightcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "lightcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "LightCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "lightcraft"
+      ],
+      "rpmNames": [
+        "lightcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/lightcraft",
+    "download": "https://github.com/storytold/lightcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/lightcraft"
+  }
+}

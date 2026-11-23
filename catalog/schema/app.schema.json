@@ -69,7 +69,7 @@
       "properties": {
         "path": {
           "type": "string",
-          "pattern": "^/icons/[a-z0-9-]+\\.svg$"
+          "pattern": "^/icons/[a-z0-9-]+\\.(?:svg|png)$"
         },
         "source": {
           "type": "string",

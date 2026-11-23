@@ -1,0 +1,46 @@
+{
+  "id": "pdfcraft",
+  "name": "PdfCraft",
+  "publisher": "ArtCraft Team",
+  "description": "PDF viewing, annotation, page organization and editing.",
+  "categories": [
+    "publishing",
+    "pdf"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/pdfcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "pdfcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "PdfCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "pdfcraft"
+      ],
+      "rpmNames": [
+        "pdfcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/pdfcraft",
+    "download": "https://github.com/storytold/pdfcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/pdfcraft"
+  }
+}

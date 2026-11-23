@@ -1,0 +1,46 @@
+{
+  "id": "effectcraft",
+  "name": "EffectCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Motion graphics, compositing and visual effects.",
+  "categories": [
+    "motion-graphics",
+    "video"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/effectcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "effectcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "EffectCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "effectcraft"
+      ],
+      "rpmNames": [
+        "effectcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/effectcraft",
+    "download": "https://github.com/storytold/effectcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/effectcraft"
+  }
+}

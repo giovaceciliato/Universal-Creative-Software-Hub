@@ -32,10 +32,10 @@ for (const file of files) {
     const icon = app.icon;
     assert(icon && typeof icon === "object" && !Array.isArray(icon), `${file}: invalid icon object`);
     assert(Object.keys(icon).every((key) => ["path", "source", "license"].includes(key)), `${file}: icon includes unsupported fields`);
-    assert(typeof icon.path === "string" && icon.path.startsWith("/icons/") && icon.path.endsWith(".svg") && /^[a-z0-9-]+$/.test(icon.path.slice(7, -4)), `${file}: icon path must point to a local SVG`);
+    assert(typeof icon.path === "string" && /^\/icons\/[a-z0-9-]+\.(svg|png)$/.test(icon.path), `${file}: icon path must point to a local SVG or PNG`);
     assert(typeof icon.source === "string" && icon.source.trim(), `${file}: missing icon source`);
     assert(typeof icon.license === "string" && icon.license.trim(), `${file}: missing icon license`);
-    assert(existsSync(new URL(`../public${icon.path}`, import.meta.url)), `${file}: SVG asset does not exist`);
+    assert(existsSync(new URL(`../public${icon.path}`, import.meta.url)), `${file}: icon asset does not exist`);
   }
   if (app.integrations !== undefined) {
     assert(app.integrations && typeof app.integrations === "object" && !Array.isArray(app.integrations), `${file}: integrations must be an object`);

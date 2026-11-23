@@ -8,3 +8,6 @@ Blender and Krita monochrome SVG marks are included in `public/icons/`.
 - These are third-party marks and do not indicate affiliation or endorsement.
 
 The app never loads third-party icons from an untrusted runtime URL. App manifest icon paths must point to a checked-in `/icons/<slug>.svg` file. If the asset fails to load, the UI shows a neutral fallback icon. Contributors should verify provenance and permissions for each newly proposed mark.
+
+
+ArtCraft app image credits: see [ArtCraft icon notice](../third_party/ARTCRAFT-ICONS.md).

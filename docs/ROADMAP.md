@@ -67,3 +67,14 @@ See [UI_DESIGN.md](UI_DESIGN.md) and [DETECTION_AND_UPDATES.md](DETECTION_AND_UP
 
 ## Success criteria for v0.1
 A user can find Blender or Krita, open its official download page, add a locally installed creative application to their library, and launch it again from one desktop interface.
+
+## ArtCraft + native installation phase
+- [x] Add all 17 Craft apps with official icons and source links
+- [x] Extend read-only scanner with catalog entries
+- [x] Add OS installer planning and explicit confirmation
+- [x] Add initial DNF/PolicyKit, MSI, WinGet and Homebrew adapters
+- [x] Check ArtCraft package SHA-256 against each publisher release manifest
+- [ ] Test installs end-to-end on Windows, Fedora and macOS
+- [ ] Verify upstream detached signatures against pinned signing keys
+- [ ] Automate safe macOS DMG copying (manual Finder step for now)
+- [ ] Add true software update detection and upgrades

@@ -1,0 +1,46 @@
+{
+  "id": "filmcraft",
+  "name": "FilmCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Video editing, color grading and sound workflows.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/filmcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "filmcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "FilmCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "filmcraft"
+      ],
+      "rpmNames": [
+        "filmcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/filmcraft",
+    "download": "https://github.com/storytold/filmcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/filmcraft"
+  }
+}

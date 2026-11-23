@@ -164,3 +164,15 @@ h3 { font-size: 18px; letter-spacing: -.035em; }
 @keyframes spin { to {transform:rotate(360deg);} }
 .spin { animation:spin 1s linear infinite; }
 @media(max-width:640px){.toolbar-actions{margin:0 0 18px;}.page-header-inline{align-items:stretch;}.software-title{flex-wrap:wrap;} }
+
+/* Native install confirmation — monochrome and intentionally explicit. */
+.software-actions { flex-wrap: wrap; justify-content: flex-end; }
+.install-modal { max-width: 545px; }
+.install-details { display: flex; flex-direction: column; gap: 0; border-top: 1px solid #171717; border-bottom: 1px solid #d8d8d8; }
+.install-details > div { display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 15px; padding: 13px 0; border-bottom: 1px solid #ececec; }
+.install-details > div:last-child { border-bottom: none; }
+.install-details span { font-size: 11px; color: #777; }
+.install-details strong { min-width: 0; overflow-wrap: anywhere; font-weight: 600; font-size: 11px; line-height: 1.6; }
+.install-explanation { font-size: 12px; line-height: 1.7; color: #4d4d4d; margin: 16px 0; }
+.install-status { display: flex; gap: 12px; align-items: center; padding: 13px 10px; background: #f5f5f5; border: 1px solid #ddd; font-size: 11px; line-height: 1.5; }
+.install-error { border-left: 3px solid #171717; background: #f1f1f1; margin-top: 15px; padding: 12px; font-size: 12px; overflow-wrap: anywhere; }

@@ -66,9 +66,27 @@ fn run_read_only(program: &str, args: &[&str]) -> Option<String> {
 }
 
 fn entries() -> Result<Vec<CatalogEntry>, String> {
-    const BLENDER: &str = include_str!("../../catalog/apps/blender.json");
-    const KRITA: &str = include_str!("../../catalog/apps/krita.json");
-    [BLENDER, KRITA]
+    [
+        include_str!("../../catalog/apps/blender.json"),
+        include_str!("../../catalog/apps/krita.json"),
+        include_str!("../../catalog/apps/photocraft.json"),
+        include_str!("../../catalog/apps/vectorcraft.json"),
+        include_str!("../../catalog/apps/filmcraft.json"),
+        include_str!("../../catalog/apps/lightcraft.json"),
+        include_str!("../../catalog/apps/pdfcraft.json"),
+        include_str!("../../catalog/apps/effectcraft.json"),
+        include_str!("../../catalog/apps/anicraft.json"),
+        include_str!("../../catalog/apps/designcraft.json"),
+        include_str!("../../catalog/apps/figcraft.json"),
+        include_str!("../../catalog/apps/texturecraft.json"),
+        include_str!("../../catalog/apps/materialcraft.json"),
+        include_str!("../../catalog/apps/wordcraft.json"),
+        include_str!("../../catalog/apps/soundcraft.json"),
+        include_str!("../../catalog/apps/deckcraft.json"),
+        include_str!("../../catalog/apps/cadcraft.json"),
+        include_str!("../../catalog/apps/gridcraft.json"),
+        include_str!("../../catalog/apps/craft-anything.json"),
+    ]
         .iter()
         .map(|data| serde_json::from_str(data).map_err(|e| format!("Invalid catalog manifest: {e}")))
         .collect()
@@ -205,6 +223,23 @@ fn scan_windows(
     let known_subfolders: &[&str] = match app {
         "blender" => &["Blender Foundation", "Blender", "Blender Foundation/Blender 5.3"],
         "krita" => &["Krita (x64)", "Krita", "Krita (x64)/bin", "Krita/bin"],
+        "photocraft" => &["PhotoCraft", "ArtCraft/PhotoCraft"],
+        "vectorcraft" => &["VectorCraft", "ArtCraft/VectorCraft"],
+        "filmcraft" => &["FilmCraft", "ArtCraft/FilmCraft"],
+        "lightcraft" => &["LightCraft", "ArtCraft/LightCraft"],
+        "pdfcraft" => &["PdfCraft", "ArtCraft/PdfCraft"],
+        "effectcraft" => &["EffectCraft", "ArtCraft/EffectCraft"],
+        "anicraft" => &["AniCraft", "ArtCraft/AniCraft"],
+        "designcraft" => &["DesignCraft", "ArtCraft/DesignCraft"],
+        "figcraft" => &["FigCraft", "ArtCraft/FigCraft"],
+        "texturecraft" => &["TextureCraft", "ArtCraft/TextureCraft"],
+        "materialcraft" => &["MaterialCraft", "ArtCraft/MaterialCraft"],
+        "wordcraft" => &["WordCraft", "ArtCraft/WordCraft"],
+        "soundcraft" => &["SoundCraft", "ArtCraft/SoundCraft"],
+        "deckcraft" => &["DeckCraft", "ArtCraft/DeckCraft"],
+        "cadcraft" => &["CADCraft", "ArtCraft/CADCraft"],
+        "gridcraft" => &["GridCraft", "ArtCraft/GridCraft"],
+        "craft-anything" => &["Craft Anything", "CraftAnything"],
         _ => &[],
     };
     for root in roots {
@@ -276,9 +311,11 @@ mod tests {
     #[test]
     fn manifests_are_loadable() {
         let manifests = entries().unwrap();
-        assert_eq!(manifests.len(), 2);
+        assert_eq!(manifests.len(), 19);
         assert!(manifests.iter().any(|app| app.id == "blender"));
         assert!(manifests.iter().any(|app| app.id == "krita"));
+        assert!(manifests.iter().any(|app| app.id == "anicraft"));
+        assert!(manifests.iter().any(|app| app.id == "craft-anything"));
     }
     #[test]
     fn version_missing_is_not_installed() {
