@@ -1,0 +1,60 @@
+name: Native desktop build checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/desktop-mvp-shell
+
+permissions:
+  contents: read
+
+jobs:
+  windows-and-macos:
+    name: Package ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+      - name: Install dependencies
+        run: npm install
+      - name: Build native app
+        run: npm run tauri build
+        env:
+          APPLE_SIGNING_IDENTITY: '-'
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: native-${{ runner.os }}
+          path: src-tauri/target/release/bundle/
+          if-no-files-found: error
+
+  fedora:
+    name: Package Fedora RPM
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Fedora build dependencies
+        run: |
+          dnf install -y nodejs npm rust cargo gcc gcc-c++ make git             webkit2gtk4.1-devel openssl-devel curl wget file             libappindicator-gtk3-devel librsvg2-devel libxdo-devel             rpm-build pkgconf-pkg-config patchelf
+      - name: Install dependencies
+        run: npm install
+      - name: Build RPM
+        run: npm run tauri build
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: native-Fedora
+          path: src-tauri/target/release/bundle/rpm/
+          if-no-files-found: error
