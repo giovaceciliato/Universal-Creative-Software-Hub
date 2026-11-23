@@ -3,6 +3,7 @@ mod downloads;
 mod installations;
 mod artcraft_catalog;
 mod github_projects;
+mod app_requests;
 
 #[tauri::command]
 fn get_downloads_directory() -> Result<String, String> {
@@ -75,6 +76,16 @@ async fn download_github_asset(
     github_projects::download_github_asset(repo, asset_id, expected_tag, app).await
 }
 
+#[tauri::command]
+async fn check_app_request(req: app_requests::AppRequest) -> Result<app_requests::CheckResult, String> {
+    app_requests::check_app_request(req).await
+}
+
+#[tauri::command]
+async fn refresh_approved_apps() -> Result<Vec<app_requests::ApprovedApp>, String> {
+    app_requests::refresh_approved_apps().await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -92,6 +103,8 @@ pub fn run() {
             inspect_github_project,
             check_github_release,
             download_github_asset,
+            check_app_request,
+            refresh_approved_apps,
         ])
         .run(tauri::generate_context!())
         .expect("error running Universal Creative Software Hub");

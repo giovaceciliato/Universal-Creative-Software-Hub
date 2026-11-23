@@ -123,3 +123,14 @@ A user can find Blender or Krita, open its official download page, add a locally
 - [x] Offer a manual Downloads-folder handoff for unapproved GitHub release files
 - [ ] Optional password-protected / encrypted private library storage
 - [ ] Install exact downloaded archive only after independently verifying provider signatures and OS compatibility
+
+## Community app submissions
+- [x] In-app form for free creative app proposals
+- [x] Block obvious duplicates in catalog and public GitHub requests
+- [x] Open a structured GitHub Issue with user-confirmed submission
+- [x] Maintainer-only /approve-app produces review PR (subject to GitHub Actions permissions)
+- [x] Sync merged metadata-only approved apps from main
+- [x] Keep installer permissions separate from new catalog entries
+- [ ] Automated near-duplicate fuzzy search and reviewer dashboard
+- [ ] Notify issue submitter of review results directly in desktop app
+- [ ] Verified installer integration for each approved community app

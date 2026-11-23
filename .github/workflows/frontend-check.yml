@@ -17,5 +17,7 @@ jobs:
         run: npm install
       - name: Validate catalog
         run: npm run validate:catalog
+      - name: Validate request moderation and duplicate protection
+        run: node scripts/test-community-requests.mjs
       - name: Check TypeScript and bundle
         run: npm run build

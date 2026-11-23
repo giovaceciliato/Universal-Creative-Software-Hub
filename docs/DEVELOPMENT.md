@@ -120,3 +120,19 @@ The post-download confirmation UI queues completion prompts in memory
 for the active session. It does not run arbitrary downloaded installers.
 The safe `get_downloads_directory` native command returns the existing
 OS Downloads folder for manual install handoff.
+
+## Public software request and moderation pipeline
+
+`src-tauri/src/app_requests.rs` implements read-only request deduplication
+against GitHub Issues and the published approved app metadata on main;
+it never invokes installer commands. `src/appRequests.ts` prepares a
+GitHub issue draft and checks duplicate bundled catalog names/links.
+
+`scripts/community-requests.mjs` handles validated issue data,
+metadata-only catalog app generation and approved-feed validation.
+The maintainer-only issue-comment workflow runs the checked-in
+`scripts/create-approved-app-pr.mjs` on the default branch after
+`/approve-app`, validates repository write permissions and creates
+a PR for human review. It is intentionally not an automatic merge.
+Run `node scripts/test-community-requests.mjs` to check integrity
+and duplicate protections.
