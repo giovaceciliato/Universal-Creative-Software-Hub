@@ -210,3 +210,31 @@ git switch --track origin/feat/expand-50-creative-software-catalog
 npm install
 npm run tauri dev
 ```
+
+## ArtCraft Suite and tracked GitHub projects
+
+**Discover → ArtCraft Suite** filters the built-in ArtCraft family (including
+the SolidCraft and MailCraft community entries) and future entries from the
+official, Ed25519-verified ArtCraft Launcher catalog.
+
+**My Library → Add GitHub project** (also available from **Updates**) accepts
+a public `https://github.com/owner/repository` URL. In the native desktop
+app it checks the repository and its latest published stable GitHub release,
+then stores a watch entry **locally** on this device. Up to 25 projects can
+be tracked at once, with a manual **Check releases** action and a one-time
+check when first opening Updates.
+
+**Updates** displays the latest GitHub release tag, the version last
+downloaded through Creative Hub, and a separately editable **manually
+reported installed version**. A release difference never automatically
+proves that the software installed on this computer is outdated.
+
+For any GitHub release with supported assets, users can choose an
+RPM/MSI/DMG/AppImage/ZIP or other supported archive and download it into
+Downloads with progress and SHA-256 verification **if the GitHub API supplies
+a digest**. Unknown projects and their downloaded files are **never**
+automatically installed or executed by Creative Hub.
+
+See [GitHub project tracking and security](docs/GITHUB_PROJECTS.md) for
+exact limitations and how release-based monitoring differs from native
+package-manager upgrades.

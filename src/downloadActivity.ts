@@ -14,6 +14,9 @@ export interface TransferTask {
   total: number;
   createdAt: number;
   filePath?: string;
+  /** GitHub release downloads are non-executable, user-selected release assets. */
+  githubRepo?: string;
+  githubAssetId?: number;
   message?: string;
 }
 
@@ -35,6 +38,8 @@ function isTask(value: unknown): value is TransferTask {
     && Number.isFinite(v.received)
     && typeof v.total === "number"
     && Number.isFinite(v.total)
+    && (v.githubRepo === undefined || (typeof v.githubRepo === "string" && /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(v.githubRepo)))
+    && (v.githubAssetId === undefined || (typeof v.githubAssetId === "number" && Number.isSafeInteger(v.githubAssetId)))
     && typeof v.createdAt === "number"
     && Number.isFinite(v.createdAt);
 }

@@ -33,3 +33,15 @@ Community apps and future unknown apps open their publisher download
 pages until native trust/install adapters are explicitly reviewed.
 
 See [ARTCRAFT_SYNC.md](ARTCRAFT_SYNC.md) for threat model and limitations.
+
+## Creative Hub category
+
+The **ArtCraft Suite** tab under Discover includes all 19 bundled official
+and community entries plus newly verified entries from the official
+signed ArtCraft Launcher catalog. This category is distinct from the
+**Creative Top 50** featured collection and the individual software
+discipline filters.
+
+ArtCraft's signed catalog and user-supplied GitHub repository URLs have
+separate trust policies. A user-added project is a tracked metadata entry,
+not an automatic ArtCraft membership or approved native installer.
