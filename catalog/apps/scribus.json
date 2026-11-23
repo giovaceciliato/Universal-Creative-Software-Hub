@@ -1,0 +1,40 @@
+{
+  "id": "scribus",
+  "name": "Scribus",
+  "publisher": "Scribus Team",
+  "description": "Professional page layout and desktop publishing with prepress PDF controls.",
+  "categories": [
+    "publishing",
+    "design"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.scribus.net/",
+    "download": "https://www.scribus.net/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "scribus.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Scribus.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "scribus"
+      ],
+      "rpmNames": [
+        "scribus"
+      ]
+    }
+  }
+}

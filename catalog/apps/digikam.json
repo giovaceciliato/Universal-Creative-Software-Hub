@@ -1,0 +1,40 @@
+{
+  "id": "digikam",
+  "name": "digiKam",
+  "publisher": "digiKam Team",
+  "description": "Digital photo management, tagging, organizing and image library workflows.",
+  "categories": [
+    "photography",
+    "management"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.digikam.org/",
+    "download": "https://www.digikam.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "digikam.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "digiKam.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "digikam"
+      ],
+      "rpmNames": [
+        "digikam"
+      ]
+    }
+  }
+}

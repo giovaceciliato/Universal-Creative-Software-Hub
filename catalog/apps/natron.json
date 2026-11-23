@@ -1,0 +1,37 @@
+{
+  "id": "natron",
+  "name": "Natron",
+  "publisher": "Natron project",
+  "description": "Node-based video compositing and visual effects for artists.",
+  "categories": [
+    "video",
+    "vfx"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://natrongithub.github.io/",
+    "download": "https://natrongithub.github.io/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "Natron.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Natron.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "Natron"
+      ]
+    }
+  }
+}

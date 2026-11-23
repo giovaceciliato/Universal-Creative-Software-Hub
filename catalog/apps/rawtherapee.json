@@ -1,0 +1,40 @@
+{
+  "id": "rawtherapee",
+  "name": "RawTherapee",
+  "publisher": "RawTherapee project",
+  "description": "High-quality RAW photo development with advanced color and detail controls.",
+  "categories": [
+    "photography",
+    "raw"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://rawtherapee.com/",
+    "download": "https://rawtherapee.com/downloads/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "rawtherapee.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "RawTherapee.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "rawtherapee"
+      ],
+      "rpmNames": [
+        "rawtherapee"
+      ]
+    }
+  }
+}

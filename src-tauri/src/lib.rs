@@ -25,6 +25,11 @@ async fn download_app(
 }
 
 #[tauri::command]
+fn installable_app_ids() -> Vec<String> {
+    installations::installable_app_ids()
+}
+
+#[tauri::command]
 async fn preview_install(app_id: String) -> Result<installations::InstallPlan, String> {
     installations::preview_install(app_id).await
 }
@@ -52,6 +57,7 @@ pub fn run() {
             scan_installed_apps,
             available_downloads,
             download_app,
+            installable_app_ids,
             preview_install,
             install_app,
             refresh_artcraft_catalog,

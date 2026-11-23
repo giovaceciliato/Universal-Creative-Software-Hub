@@ -1,0 +1,37 @@
+{
+  "id": "makehuman",
+  "name": "MakeHuman",
+  "publisher": "MakeHuman Community",
+  "description": "Create and customize human 3D characters for animation and illustration.",
+  "categories": [
+    "3d",
+    "characters"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.makehumancommunity.org/",
+    "download": "https://www.makehumancommunity.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "makehuman.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "MakeHuman.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "makehuman"
+      ]
+    }
+  }
+}

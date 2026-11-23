@@ -1,0 +1,45 @@
+{
+  "id": "lmms",
+  "name": "LMMS",
+  "publisher": "LMMS contributors",
+  "description": "Digital music composition with software instruments, samples and sequencing.",
+  "categories": [
+    "audio",
+    "music-production"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://lmms.io/",
+    "download": "https://lmms.io/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "lmms.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "LMMS.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "lmms"
+      ],
+      "rpmNames": [
+        "lmms"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/lmms.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

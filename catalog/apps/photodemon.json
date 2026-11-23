@@ -1,0 +1,25 @@
+{
+  "id": "photodemon",
+  "name": "PhotoDemon",
+  "publisher": "PhotoDemon project",
+  "description": "Portable Windows photo editor supporting layers, filters and many image formats.",
+  "categories": [
+    "image-editing",
+    "photography"
+  ],
+  "platforms": [
+    "windows"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://photodemon.org/",
+    "download": "https://photodemon.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "PhotoDemon.exe"
+      ]
+    }
+  }
+}

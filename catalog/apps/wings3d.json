@@ -1,0 +1,32 @@
+{
+  "id": "wings3d",
+  "name": "Wings 3D",
+  "publisher": "Wings 3D project",
+  "description": "Subdivision-based polygon modeling for 3D geometry and shapes.",
+  "categories": [
+    "3d",
+    "modeling"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.wings3d.com/",
+    "download": "https://www.wings3d.com/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "wings3d.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "wings3d"
+      ]
+    }
+  }
+}

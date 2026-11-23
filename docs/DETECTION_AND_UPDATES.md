@@ -79,3 +79,14 @@ A user-confirmed native `preview_install` / `install_app` flow now exists.
 It chooses allowlisted package IDs or verified official ArtCraft artifacts,
 not arbitrary commands supplied by catalog JSON. The Updates page is
 still a placeholder. See [INSTALLATION.md](INSTALLATION.md).
+
+## Wider scanner catalog
+
+The read-only scanner now recognizes hints from all **69 bundled catalog**
+entries (including the Creative Top 50 and ArtCraft suite). Only entries
+with platform-specific hints are checked, and web-only entries have no
+native detection sources. A filename/path hit remains a **name-only**
+candidate; a successful RPM query is an **exact-package-id** match.
+
+The scanner may miss app stores, manually unpacked archives or portable
+applications. It does not automatically run or update applications.

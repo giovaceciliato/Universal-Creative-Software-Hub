@@ -1,0 +1,32 @@
+{
+  "id": "sonic-pi",
+  "name": "Sonic Pi",
+  "publisher": "Sonic Pi project",
+  "description": "Live-coded music and algorithmic sound synthesis in a beginner-friendly environment.",
+  "categories": [
+    "audio",
+    "creative-coding"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://sonic-pi.net/",
+    "download": "https://sonic-pi.net/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "sonic-pi.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "sonic-pi"
+      ]
+    }
+  }
+}

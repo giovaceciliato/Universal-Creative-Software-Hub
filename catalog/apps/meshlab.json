@@ -1,0 +1,40 @@
+{
+  "id": "meshlab",
+  "name": "MeshLab",
+  "publisher": "Visual Computing Lab, ISTI-CNR",
+  "description": "Processing, cleaning, converting and analyzing 3D meshes.",
+  "categories": [
+    "3d",
+    "modeling"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.meshlab.net/",
+    "download": "https://www.meshlab.net/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "meshlab.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "MeshLab.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "meshlab"
+      ],
+      "rpmNames": [
+        "meshlab"
+      ]
+    }
+  }
+}

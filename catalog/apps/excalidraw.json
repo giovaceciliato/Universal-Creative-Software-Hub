@@ -1,0 +1,24 @@
+{
+  "id": "excalidraw",
+  "name": "Excalidraw",
+  "publisher": "Excalidraw contributors",
+  "description": "Browser-based whiteboard for sketches, diagrams and collaborative ideation.",
+  "categories": [
+    "diagrams",
+    "collaboration"
+  ],
+  "platforms": [
+    "web"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://excalidraw.com/",
+    "download": "https://excalidraw.com/"
+  },
+  "integrations": {},
+  "icon": {
+    "path": "/icons/excalidraw.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

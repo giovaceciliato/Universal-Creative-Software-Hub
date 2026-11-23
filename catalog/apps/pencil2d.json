@@ -1,0 +1,37 @@
+{
+  "id": "pencil2d",
+  "name": "Pencil2D",
+  "publisher": "Pencil2D project",
+  "description": "Hand-drawn two-dimensional animation with a simple timeline.",
+  "categories": [
+    "animation",
+    "illustration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.pencil2d.org/",
+    "download": "https://www.pencil2d.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "pencil2d.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Pencil2D.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "pencil2d"
+      ]
+    }
+  }
+}

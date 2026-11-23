@@ -1,0 +1,37 @@
+{
+  "id": "bforartists",
+  "name": "Bforartists",
+  "publisher": "Bforartists project",
+  "description": "Blender-based 3D creation suite with an alternative artist-focused interface.",
+  "categories": [
+    "3d",
+    "rendering"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.bforartists.co/",
+    "download": "https://www.bforartists.co/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "bforartists.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Bforartists.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "bforartists"
+      ]
+    }
+  }
+}

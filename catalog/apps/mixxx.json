@@ -1,0 +1,40 @@
+{
+  "id": "mixxx",
+  "name": "Mixxx",
+  "publisher": "Mixxx project",
+  "description": "Live DJ mixing, beat matching and performance features.",
+  "categories": [
+    "audio",
+    "dj"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://mixxx.org/",
+    "download": "https://mixxx.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "mixxx.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Mixxx.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "mixxx"
+      ],
+      "rpmNames": [
+        "mixxx"
+      ]
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "drawpile",
+  "name": "Drawpile",
+  "publisher": "Drawpile contributors",
+  "description": "Collaborative painting and drawing in real time with shared canvases.",
+  "categories": [
+    "digital-painting",
+    "collaboration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://drawpile.net/",
+    "download": "https://drawpile.net/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "drawpile.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Drawpile.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "drawpile"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "godot-engine",
+  "name": "Godot Engine",
+  "publisher": "Godot Engine project",
+  "description": "Open-source engine for interactive 2D/3D art, animation and games.",
+  "categories": [
+    "3d",
+    "game-development"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://godotengine.org/",
+    "download": "https://godotengine.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "godot.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "godot"
+      ],
+      "rpmNames": [
+        "godot"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/godotengine.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

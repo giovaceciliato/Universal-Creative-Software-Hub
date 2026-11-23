@@ -1,0 +1,45 @@
+{
+  "id": "audacity",
+  "name": "Audacity",
+  "publisher": "Audacity Team",
+  "description": "Multitrack audio recording and editing with audio effects.",
+  "categories": [
+    "audio",
+    "editing"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.audacityteam.org/",
+    "download": "https://www.audacityteam.org/download/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "audacity.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Audacity.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "audacity"
+      ],
+      "rpmNames": [
+        "audacity"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/audacity.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "fontforge",
+  "name": "FontForge",
+  "publisher": "FontForge project",
+  "description": "Typeface creation, editing and font generation for designers.",
+  "categories": [
+    "typography",
+    "design"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://fontforge.org/",
+    "download": "https://fontforge.org/en-US/downloads/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "fontforge.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "FontForge.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "fontforge"
+      ],
+      "rpmNames": [
+        "fontforge"
+      ]
+    }
+  },
+  "icon": {
+    "path": "/icons/fontforge.svg",
+    "source": "Simple Icons",
+    "license": "CC0-1.0"
+  }
+}

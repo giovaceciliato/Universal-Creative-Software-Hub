@@ -1,0 +1,40 @@
+{
+  "id": "hydrogen",
+  "name": "Hydrogen",
+  "publisher": "Hydrogen contributors",
+  "description": "Pattern-based drum machine for rhythm composition and live sequencing.",
+  "categories": [
+    "audio",
+    "music-production"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://hydrogen-music.org/",
+    "download": "https://hydrogen-music.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "hydrogen.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "Hydrogen.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "hydrogen"
+      ],
+      "rpmNames": [
+        "hydrogen"
+      ]
+    }
+  }
+}

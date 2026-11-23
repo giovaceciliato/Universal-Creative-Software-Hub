@@ -1,0 +1,28 @@
+{
+  "id": "flowblade",
+  "name": "Flowblade",
+  "publisher": "Flowblade project",
+  "description": "Linux-focused nonlinear editing with multi-track workflows.",
+  "categories": [
+    "video",
+    "editing"
+  ],
+  "platforms": [
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://jliljebl.github.io/flowblade/",
+    "download": "https://jliljebl.github.io/flowblade/"
+  },
+  "integrations": {
+    "linux": {
+      "executableNames": [
+        "flowblade"
+      ],
+      "rpmNames": [
+        "flowblade"
+      ]
+    }
+  }
+}

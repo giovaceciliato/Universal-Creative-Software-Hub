@@ -1,0 +1,40 @@
+{
+  "id": "darktable",
+  "name": "darktable",
+  "publisher": "darktable project",
+  "description": "Non-destructive RAW image development and photography workflow management.",
+  "categories": [
+    "photography",
+    "raw"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.darktable.org/",
+    "download": "https://www.darktable.org/install/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "darktable.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "darktable.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "darktable"
+      ],
+      "rpmNames": [
+        "darktable"
+      ]
+    }
+  }
+}

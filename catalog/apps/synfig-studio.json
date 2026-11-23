@@ -1,0 +1,32 @@
+{
+  "id": "synfig-studio",
+  "name": "Synfig Studio",
+  "publisher": "Synfig contributors",
+  "description": "Vector-based 2D animation with interpolation and character rigging.",
+  "categories": [
+    "animation",
+    "vector"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://www.synfig.org/",
+    "download": "https://www.synfig.org/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "synfigstudio.exe"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "synfigstudio"
+      ]
+    }
+  }
+}

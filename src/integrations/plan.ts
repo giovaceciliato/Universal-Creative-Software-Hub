@@ -1,4 +1,4 @@
-import type { CatalogApp, Platform, PlatformIntegration } from "../types";
+import type { CatalogApp, NativePlatform, PlatformIntegration } from "../types";
 import type { DetectionSource } from "./contracts";
 
 /**
@@ -11,7 +11,7 @@ export interface DetectionHint {
   identifier: string;
 }
 
-const byPlatform: Record<Platform, readonly (readonly [keyof PlatformIntegration, DetectionSource])[]> = {
+const byPlatform: Record<NativePlatform, readonly (readonly [keyof PlatformIntegration, DetectionSource])[]> = {
   windows: [
     ["executableNames", "executable-path"],
     ["wingetIds", "winget"],
@@ -28,7 +28,7 @@ const byPlatform: Record<Platform, readonly (readonly [keyof PlatformIntegration
   ],
 };
 
-export function detectionHints(app: CatalogApp, platform: Platform): DetectionHint[] {
+export function detectionHints(app: CatalogApp, platform: NativePlatform): DetectionHint[] {
   const info = app.integrations?.[platform];
   if (!info) return [];
   const hints: DetectionHint[] = [];

@@ -19,6 +19,54 @@ const CRAFT_IDS: &[&str] = &[
 ];
 static INSTALLING: AtomicBool = AtomicBool::new(false);
 
+/**
+ * Curated Fedora 45 RPM names verified against packages.fedoraproject.org.
+ * The catalog JSON is NOT an executable command registry; unknown package
+ * names never pass through to DNF.
+ */
+const FEDORA_PACKAGES: &[(&str, &str)] = &[
+    ("gimp", "gimp"),
+    ("darktable", "darktable"),
+    ("rawtherapee", "rawtherapee"),
+    ("digikam", "digikam"),
+    ("mypaint", "mypaint"),
+    ("pinta", "pinta"),
+    ("inkscape", "inkscape"),
+    ("scribus", "scribus"),
+    ("libreoffice-draw", "libreoffice-draw"),
+    ("fontforge", "fontforge"),
+    ("freecad", "freecad"),
+    ("openscad", "openscad"),
+    ("meshlab", "meshlab"),
+    ("godot-engine", "godot"),
+    ("kdenlive", "kdenlive"),
+    ("shotcut", "shotcut"),
+    ("openshot", "openshot"),
+    ("flowblade", "flowblade"),
+    ("audacity", "audacity"),
+    ("lmms", "lmms"),
+    ("hydrogen", "hydrogen"),
+    ("qtractor", "qtractor"),
+    ("mixxx", "mixxx"),
+];
+
+fn curated_fedora_package(app_id: &str) -> Option<&'static str> {
+    FEDORA_PACKAGES.iter().find_map(|&(id, package)| (id == app_id).then_some(package))
+}
+
+pub fn installable_app_ids() -> Vec<String> {
+    let mut ids: Vec<String> = ["blender", "krita"]
+        .iter().map(|id| id.to_string()).collect();
+    if matches!(std::env::consts::OS, "windows" | "macos" | "linux") {
+        ids.extend(CRAFT_IDS.iter().map(|id| id.to_string()));
+    }
+    if std::env::consts::OS == "linux" && is_fedora() {
+        ids.extend(FEDORA_PACKAGES.iter().map(|&(id, _)| id.to_string()));
+    }
+    ids
+}
+
+
 struct InstallLock;
 impl InstallLock {
     fn acquire() -> Result<Self, String> {
@@ -173,6 +221,18 @@ fn plan_for(app_id: &str) -> Result<ProposedInstall, String> {
                      "Homebrew must be installed. It may request system authorization when the application is copied.".to_string(), InstallStrategy::MacHomebrew(cask)),
                 _ => return Err("Direct installation for this operating system is unavailable. Use the publisher download instead.".into()),
             }
+        } else if let Some(package) = curated_fedora_package(app_id) {
+            if std::env::consts::OS != "linux" || !is_fedora() {
+                return Err("This installer is available only on Fedora. Use the publisher's official download page elsewhere.".into());
+            }
+            (
+                "repository".to_string(),
+                "Fedora DNF".to_string(),
+                format!("Fedora packages: {package}"),
+                true, false, None,
+                "Fedora uses its configured package repositories and will request administrator authorization through PolicyKit.".to_string(),
+                InstallStrategy::FedoraPackage(package),
+            )
         } else if CRAFT_IDS.contains(&app_id) {
             if std::env::consts::OS == "linux" && !is_fedora() {
                 return Err("This RPM installer currently supports Fedora. Use the official release page elsewhere.".into());
@@ -409,6 +469,9 @@ mod tests {
         assert!(CRAFT_IDS.contains(&"photocraft"));
         assert!(!CRAFT_IDS.contains(&"evil-tool"));
         assert!(plan_for("evil-tool").is_err());
+        assert_eq!(curated_fedora_package("gimp"), Some("gimp"));
+        assert_eq!(curated_fedora_package("godot-engine"), Some("godot"));
+        assert_eq!(curated_fedora_package("davinci-resolve-free"), None);
     }
     #[test]
     fn checksums_are_exactly_matched() {

@@ -1,0 +1,40 @@
+{
+  "id": "mypaint",
+  "name": "MyPaint",
+  "publisher": "MyPaint contributors",
+  "description": "Natural-media digital painting with a distraction-free canvas and brush engines.",
+  "categories": [
+    "digital-painting",
+    "illustration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "links": {
+    "website": "https://mypaint.app/",
+    "download": "https://mypaint.app/"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "mypaint.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "MyPaint.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "mypaint"
+      ],
+      "rpmNames": [
+        "mypaint"
+      ]
+    }
+  }
+}
