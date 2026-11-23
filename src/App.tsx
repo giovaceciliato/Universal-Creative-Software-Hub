@@ -5,7 +5,7 @@ import { open as chooseFile } from "@tauri-apps/plugin-dialog";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
   ArrowDownToLine, ArrowUpRight, Check, CheckCircle2, Compass, ExternalLink,
-  FolderOpen, Heart, Info, Library, Link2, Package, Plus, RefreshCw, ListFilter,
+  FolderOpen, Heart, Info, Library, Link2, Package, Plus, RefreshCw,
   Search, Settings2, Trash2, X,
 } from "lucide-react";
 import { catalog as bundledCatalog, categoryLabel, localPlatform, validWebUrl } from "./catalog";
