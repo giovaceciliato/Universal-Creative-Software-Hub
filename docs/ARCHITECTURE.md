@@ -16,11 +16,19 @@ This is a **design proposal**, not an implemented architecture.
 - Desktop: Tauri 2 (Rust), targeting Windows, macOS, and Fedora Linux
 - Future Android app: Tauri 2 mobile support with native Android adapters where necessary
 - UI: React and TypeScript
-- Local database: SQLite
+- Current prototype persistence: browser/webview localStorage (favorites and shortcuts). Migrate to SQLite after native library requirements are defined.
 - Initial catalog: repository JSON files in `catalog/apps/`
 - Optional future service: catalog API, only if a static GitHub-hosted catalog becomes limiting
 
 Avoid requiring accounts or a central backend for basic launching and browsing.
+
+## New integration contracts
+
+See [Detection and updates](DETECTION_AND_UPDATES.md). `src/integrations/contracts.ts` defines read-only scan matches and update assessments. `src/integrations/plan.ts` maps catalog metadata to identifier hints. Neither calls the OS or runs updates.
+
+Distinguish **saved** (user bookmark), **detected** (read-only manager/OS observation), and **managed** (provider capable of reporting/updating this installation). Multiple installs of the same app can coexist.
+
+The next native IPC layer will be exposed through explicitly allowlisted Rust commands. Catalog JSON must never become an arbitrary shell command or an executable URL.
 
 ## Boundaries and trust
 

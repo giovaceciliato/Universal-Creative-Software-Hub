@@ -6,8 +6,8 @@ Roadmap items are goals, **not completed features or guaranteed dates**.
 - [x] Public repository and MIT license
 - [x] Initial documentation and catalog format
 - [x] Example listings: Blender and Krita
-- [ ] Agree on UI structure and visual direction
-- [ ] Select final frontend/desktop stack
+- [x] Agree on UI structure and visual direction (monochrome redesign)
+- [x] Select frontend/desktop stack (Tauri 2 + React/TypeScript)
 
 ## Supported platform targets
 
@@ -27,6 +27,15 @@ See [PLATFORMS.md](PLATFORMS.md) for planned packages and test criteria.
 - [ ] Development builds and smoke tests on Windows, macOS, and Fedora
 - [ ] Package launchers as .exe for Windows, .dmg for macOS, and .rpm for Fedora
 - [ ] Verify app launch behavior and official download links on each of those OSs
+
+## Phase 1.5 — monochrome UI and detection architecture
+- [x] Replace purple prototype with minimalist black-and-white interface
+- [x] Store verified-source monochrome SVG marks in repository
+- [x] Extend catalog schema for per-platform detection identifiers
+- [x] Define scan and update result states and adapter boundaries
+- [ ] Validate real installations on Windows, macOS, Fedora
+
+See [UI_DESIGN.md](UI_DESIGN.md) and [DETECTION_AND_UPDATES.md](DETECTION_AND_UPDATES.md).
 
 ## Phase 2 — operating-system integrations
 - [ ] Installed-app detection (platform-specific)
