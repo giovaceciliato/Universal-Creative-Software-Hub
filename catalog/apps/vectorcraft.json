@@ -1,0 +1,46 @@
+{
+  "id": "vectorcraft",
+  "name": "VectorCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Vector illustration and drawing tools built in Rust.",
+  "categories": [
+    "vector",
+    "illustration"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/vectorcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "vectorcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "VectorCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "vectorcraft"
+      ],
+      "rpmNames": [
+        "vectorcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/vectorcraft",
+    "download": "https://github.com/storytold/vectorcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/vectorcraft"
+  }
+}

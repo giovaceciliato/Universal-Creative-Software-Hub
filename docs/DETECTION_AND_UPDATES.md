@@ -1,6 +1,6 @@
 # Application detection and update architecture
 
-**Status: initial native read-only scanner implemented** for Blender and Krita. Running a scan requires an explicit click. App update checking and update execution remain unimplemented. The downloader is separate and never runs downloaded files.
+**Status: initial native read-only scanner implemented** for Blender, Krita and 17 ArtCraft apps. Running a scan requires an explicit click. App update checking and update execution remain unimplemented. The downloader is separate and never runs downloaded files.
 
 ## 1. Sources of truth
 
@@ -72,3 +72,10 @@ Version comparison is provider-specific. Never guess an update from a GitHub tag
 - [ ] Signed public package releases after platform testing
 
 The Installed screen now reports actual scanner findings and source confidence; the Updates screen remains an honest placeholder. See [DOWNLOADS.md](DOWNLOADS.md) for separately implemented direct file downloads.
+
+## Native installations are separate from update checks
+
+A user-confirmed native `preview_install` / `install_app` flow now exists.
+It chooses allowlisted package IDs or verified official ArtCraft artifacts,
+not arbitrary commands supplied by catalog JSON. The Updates page is
+still a placeholder. See [INSTALLATION.md](INSTALLATION.md).

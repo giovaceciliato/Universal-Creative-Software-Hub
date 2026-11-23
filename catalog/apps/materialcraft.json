@@ -1,0 +1,46 @@
+{
+  "id": "materialcraft",
+  "name": "MaterialCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Procedural materials and node-based material design.",
+  "categories": [
+    "3d",
+    "materials"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/materialcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "materialcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "MaterialCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "materialcraft"
+      ],
+      "rpmNames": [
+        "materialcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/materialcraft",
+    "download": "https://github.com/storytold/materialcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/materialcraft"
+  }
+}

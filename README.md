@@ -4,7 +4,7 @@
 
 Universal Creative Software Hub aims to make creative tools easier to discover, organize, launch, and keep up to date — from established applications like **Blender** and **Krita** to tools built by independent developers.
 
-> **Status:** Alpha desktop application. Catalog discovery, local shortcuts, manual installed-app scanning, and publisher-file downloads are implemented in source. Automatic installation and third-party update management are **not** implemented.
+> **Status:** Alpha desktop application. Catalog discovery, local shortcuts, manual installed-app scanning, and publisher-file downloads are implemented in source. Native installation of supported catalog apps is in alpha; third-party update management remains **unimplemented**.
 
 ## Vision
 
@@ -82,7 +82,7 @@ The hub's own source code is licensed under the [MIT License](LICENSE). Third-pa
 
 ## Try the early desktop prototype
 
-The desktop prototype includes Discover, catalog search, local favorites and shortcuts, read-only app scanning, and native publisher-file downloads. Updates and package installation are **not implemented**.
+The desktop prototype includes Discover, catalog search, local favorites and shortcuts, read-only app scanning, native publisher-file downloads, and user-approved installation. Updates are **not implemented**; supported native installations require explicit confirmation.
 
 ```sh
 npm install
@@ -107,7 +107,7 @@ The catalog also includes declarative per-platform identifiers for future native
 
 ## Scan and download — early native implementation
 
-In the desktop app, click **Scan computer** under Discover or Installed. The read-only scanner currently recognizes catalog entries **Blender and Krita** via RPM/Flatpak/desktop entries and PATH on Fedora, Homebrew/application bundles on macOS, and WinGet/known locations on Windows. Name-only matches are explicitly marked unverified.
+In the desktop app, click **Scan computer** under Discover or Installed. The read-only scanner recognizes **Blender, Krita and the ArtCraft suite** through supported sources via RPM/Flatpak/desktop entries and PATH on Fedora, Homebrew/application bundles on macOS, and WinGet/known locations on Windows. Name-only matches are explicitly marked unverified.
 
 The **Download** button saves an official publisher release file directly into the device's Downloads folder (one-click, with progress). This is a **download**, not an installation or upgrade. Files are not executed automatically. Known SHA-256 hashes are checked; Krita Linux AppImage requires manual signature verification because no SHA-256 hash is pinned yet.
 
@@ -123,3 +123,29 @@ npm run tauri dev
 ```
 
 This code is still an alpha. Real scanning and download behavior must be tested on the host platform; GitHub CI checks compilation but cannot validate every existing installation or download mirror.
+
+## Install software and ArtCraft suite
+
+The catalog includes **17 ArtCraft Crafting Apps** from the official
+[ArtCraft Team](https://getartcraft.com/apps), with their original app icons.
+ArtCraft Studio is a separate product and is not included.
+
+Click **Install app** to review the release, provider and expected authorization
+prompt before proceeding. Windows uses WinGet or MSI; Fedora uses DNF and
+PolicyKit; macOS uses Homebrew or opens ArtCraft DMGs for manual finishing.
+The **Download** action remains separate.
+
+ArtCraft installers are restricted to allowlisted `storytold` GitHub releases,
+with SHA-256 verification against the publisher's release manifest. No
+catalog-provided scripts are ever executed.
+
+See [Native installation and security](docs/INSTALLATION.md) and
+[ArtCraft suite](docs/ARTCRAFT_SUITE.md). Native installation needs real-OS
+testing; it is not a guaranteed one-click install on every platform.
+
+```sh
+git fetch origin
+git switch --track origin/feat/native-install-artcraft-suite
+npm install
+npm run tauri dev
+```

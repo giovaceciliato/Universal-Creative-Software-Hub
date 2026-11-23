@@ -1,0 +1,46 @@
+{
+  "id": "craft-anything",
+  "name": "Craft Anything",
+  "publisher": "ArtCraft Team",
+  "description": "Explore how software works and create your own tools.",
+  "categories": [
+    "development",
+    "creative-tools"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/craft-anything.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "craft-anything.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "CraftAnything.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "craft-anything"
+      ],
+      "rpmNames": [
+        "craft-anything"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/craft-anything",
+    "download": "https://github.com/storytold/craft-anything/releases/latest",
+    "sourceCode": "https://github.com/storytold/craft-anything"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "texturecraft",
+  "name": "TextureCraft",
+  "publisher": "ArtCraft Team",
+  "description": "3D texture painting for digital artists.",
+  "categories": [
+    "3d",
+    "digital-painting"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/texturecraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "texturecraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "TextureCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "texturecraft"
+      ],
+      "rpmNames": [
+        "texturecraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/texturecraft",
+    "download": "https://github.com/storytold/texturecraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/texturecraft"
+  }
+}

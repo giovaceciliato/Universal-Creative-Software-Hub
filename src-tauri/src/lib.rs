@@ -1,5 +1,6 @@
 mod scanner;
 mod downloads;
+mod installations;
 
 #[tauri::command]
 async fn scan_installed_apps() -> Result<scanner::ScanReport, String> {
@@ -22,6 +23,20 @@ async fn download_app(
     downloads::download_app(app_id, app).await
 }
 
+#[tauri::command]
+async fn preview_install(app_id: String) -> Result<installations::InstallPlan, String> {
+    installations::preview_install(app_id).await
+}
+
+#[tauri::command]
+async fn install_app(
+    app_id: String,
+    expected_version: String,
+    app: tauri::AppHandle,
+) -> Result<installations::InstallOutcome, String> {
+    installations::install_app(app_id, expected_version, app).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -31,6 +46,8 @@ pub fn run() {
             scan_installed_apps,
             available_downloads,
             download_app,
+            preview_install,
+            install_app,
         ])
         .run(tauri::generate_context!())
         .expect("error running Universal Creative Software Hub");

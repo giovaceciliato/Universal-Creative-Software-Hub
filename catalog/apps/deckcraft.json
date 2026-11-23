@@ -1,0 +1,46 @@
+{
+  "id": "deckcraft",
+  "name": "DeckCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Presentation authoring and slide shows.",
+  "categories": [
+    "presentations",
+    "design"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/deckcraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "deckcraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "DeckCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "deckcraft"
+      ],
+      "rpmNames": [
+        "deckcraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/deckcraft",
+    "download": "https://github.com/storytold/deckcraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/deckcraft"
+  }
+}

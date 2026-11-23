@@ -51,10 +51,20 @@ The `tauri.*.conf.json` files configure Windows NSIS, macOS DMG, and Linux RPM a
 
 ## Current limitations
 
-- Catalog currently has Blender and Krita; download buttons lead to publishers' official pages.
+- Catalog includes Blender, Krita and 17 ArtCraft apps, with local icons and official distribution pages.
 - Saved catalog entries are bookmarks, not proof that the apps are installed.
-- A read-only scanner now checks Blender and Krita through platform-specific local package metadata and known paths. Other programs are not yet recognized; source and confidence are shown.
+- The read-only scanner checks the curated catalog against platform metadata and known paths. Unknown portable installs may not be found.
 - Publisher-file direct downloads are available on supported architectures, with progress and checksum validation where pinned; no downloaded file is executed.
 - User library currently uses localStorage, not SQLite; migration to an application database may follow.
 - Native builds and installers must be tested on each target OS before being called released.
 - This initial app icon is a temporary neutral geometric placeholder until branding is chosen.
+
+## Native installation
+
+`src-tauri/src/installations.rs` exposes allowlisted `preview_install` and
+`install_app` commands. A confirmation modal always precedes installation.
+
+Fedora requires DNF, `pkexec` and a running PolicyKit authentication agent.
+Windows uses WinGet or Windows Installer with normal UAC prompts; macOS
+requires Homebrew for Blender/Krita while ArtCraft DMGs open for manual copying.
+No privilege prompt is bypassed. See [INSTALLATION.md](INSTALLATION.md).

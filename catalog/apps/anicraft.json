@@ -1,0 +1,46 @@
+{
+  "id": "anicraft",
+  "name": "AniCraft",
+  "publisher": "ArtCraft Team",
+  "description": "Vector-based 2D animation and motion design.",
+  "categories": [
+    "animation",
+    "vector"
+  ],
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "pricingModel": "free-open-source",
+  "icon": {
+    "path": "/icons/anicraft.png",
+    "source": "ArtCraft Team, official craft-launcher repository",
+    "license": "MIT"
+  },
+  "integrations": {
+    "windows": {
+      "executableNames": [
+        "anicraft.exe"
+      ]
+    },
+    "macos": {
+      "bundleNames": [
+        "AniCraft.app"
+      ]
+    },
+    "linux": {
+      "executableNames": [
+        "anicraft"
+      ],
+      "rpmNames": [
+        "anicraft"
+      ]
+    }
+  },
+  "links": {
+    "website": "https://getartcraft.com/apps/anicraft",
+    "download": "https://github.com/storytold/anicraft/releases/latest",
+    "sourceCode": "https://github.com/storytold/anicraft"
+  }
+}

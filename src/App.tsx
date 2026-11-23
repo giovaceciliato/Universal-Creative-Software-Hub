@@ -35,6 +35,18 @@ interface DownloadResult {
   checksumVerified: boolean;
 }
 interface DownloadProgress { appId: string; received: number; total: number; }
+interface InstallPlan {
+  appId: string;
+  version: string;
+  method: string;
+  source: string;
+  requiresAuthorization: boolean;
+  manualSteps: boolean;
+  sizeBytes?: number;
+  message: string;
+}
+interface InstallOutcome { appId: string; status: "installed" | "manual-step"; message: string; }
+interface InstallProgress { appId: string; received: number; total: number; }
 
 const native = isTauri();
 const devicePlatform = localPlatform();
@@ -102,11 +114,17 @@ export default function App() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [downloadPercent, setDownloadPercent] = useState<Record<string, number>>({});
   const [completedDownloads, setCompletedDownloads] = useState<Record<string, DownloadResult>>({});
+  const [installPlan, setInstallPlan] = useState<InstallPlan | null>(null);
+  const [checkingInstall, setCheckingInstall] = useState<string | null>(null);
+  const [installing, setInstalling] = useState(false);
+  const [installProgress, setInstallProgress] = useState<number | null>(null);
+  const [installError, setInstallError] = useState("");
 
   useEffect(() => {
     if (!native) return;
     let disposed = false;
     let unlisten: (() => void) | undefined;
+    let unlistenInstall: (() => void) | undefined;
     void invoke<DownloadOffer[]>("available_downloads")
       .then(offers => { if (!disposed) setDownloadOffers(offers); })
       .catch(() => { if (!disposed) setDownloadOffers([]); });
@@ -121,7 +139,15 @@ export default function App() {
       if (disposed) remove();
       else unlisten = remove;
     }).catch(() => {});
-    return () => { disposed = true; unlisten?.(); };
+    void listen<InstallProgress>("creative-install-progress", event => {
+      if (!disposed && event.payload.total > 0) {
+        setInstallProgress(Math.min(100, Math.round(100 * event.payload.received / event.payload.total)));
+      }
+    }).then(remove => {
+      if (disposed) remove();
+      else unlistenInstall = remove;
+    }).catch(() => {});
+    return () => { disposed = true; unlisten?.(); unlistenInstall?.(); };
   }, []);
 
   const saved = catalog.filter(app => favorites.includes(app.id));
@@ -161,6 +187,68 @@ export default function App() {
     } finally {
       setScanning(false);
     }
+  }
+
+  async function requestInstallation(app: CatalogApp) {
+    if (!native) {
+      await openWebsite(app.links.download);
+      return;
+    }
+    if (installing || checkingInstall) return;
+    setInstallError("");
+    setCheckingInstall(app.id);
+    try {
+      const plan = await invoke<InstallPlan>("preview_install", { appId: app.id });
+      setInstallPlan(plan);
+      setInstallProgress(null);
+    } catch (error) {
+      setNotification(`No native installation is configured for ${app.name}: ${String(error)}. Use its official download page instead.`);
+    } finally {
+      setCheckingInstall(null);
+    }
+  }
+
+  async function confirmInstallation() {
+    if (!installPlan || installing) return;
+    setInstalling(true);
+    setInstallError("");
+    setInstallProgress(null);
+    try {
+      const result = await invoke<InstallOutcome>("install_app", {
+        appId: installPlan.appId,
+        expectedVersion: installPlan.version,
+      });
+      setNotification(`${catalog.find(a => a.id === result.appId)?.name ?? result.appId}: ${result.message}`);
+      setInstallPlan(null);
+      if (result.status === "installed") {
+        try {
+          const report = await invoke<ScanReport>("scan_installed_apps");
+          setScanReport(report);
+        } catch {
+          // A completed OS installer is not the same thing as scan verification.
+        }
+      }
+    } catch (error) {
+      setInstallError(String(error));
+    } finally {
+      setInstalling(false);
+    }
+  }
+
+  function InstallButton({ app, small = false }: { app: CatalogApp; small?: boolean }) {
+    const installed = scanReport?.matches.some(match =>
+      match.appId === app.id && match.confidence === "exact-package-id",
+    ) ?? false;
+    return <button
+      type="button"
+      className="black-button"
+      disabled={installing || Boolean(checkingInstall) || installed}
+      aria-label={installed ? `${app.name} already installed` : `Install ${app.name}`}
+      onClick={() => { void requestInstallation(app); }}
+    >
+      {checkingInstall === app.id ? "Checking..." : installed ? "Installed" : small ? "Install" : "Install app"}
+      {installed ? <CheckCircle2 size={16}/> : <ArrowDownToLine size={16}/>}
+    </button>;
   }
 
   async function directDownload(app: CatalogApp) {
@@ -324,13 +412,14 @@ export default function App() {
                     <button className="icon-action" type="button" title={favorites.includes(app.id) ? "Remove from library" : "Save to library"} aria-label={favorites.includes(app.id) ? `Remove ${app.name} from library` : `Save ${app.name} to library`} aria-pressed={favorites.includes(app.id)} onClick={() => favorite(app.id)}>
                       <Heart size={19} fill={favorites.includes(app.id) ? "currentColor" : "none"}/>
                     </button>
-                    <DownloadButton app={app} />
+                    <InstallButton app={app} />
+                    <DownloadButton app={app} small />
                   </div>
                 </article>
               ))}
               {filtered.length === 0 && <div className="empty"><Search size={26}/><h3>Nothing found</h3><p>Try another search or choose a different category.</p><button type="button" className="outline-button" onClick={() => {setQuery("");setCategory("all");setPlatform("all");}}>Reset filters</button></div>}
             </div>
-            <div className="footnote"><Info size={15}/><span>Native downloads save publisher files to Downloads without running them. Software installation and updates are not automated.</span></div>
+            <div className="footnote"><Info size={15}/><span>Install is performed only after confirmation using your OS installer or package manager. Some systems request administrator approval. Downloads remain available separately.</span></div>
           </>
         )}
 
@@ -339,7 +428,7 @@ export default function App() {
             <header className="page-header page-header-inline"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>My Library.</h1><p className="subheading">Saved software and shortcuts, all in one place.</p></div><button className="black-button" type="button" onClick={() => setAdding(true)}><Plus size={17}/> Add shortcut</button></header>
             {count === 0 && <div className="empty large"><FolderOpen size={33}/><h3>Your library is empty</h3><p>Save an app from Discover, or add a local executable or web link.</p><button type="button" className="black-button" onClick={() => setView("discover")}>Explore software <ArrowUpRight size={16}/></button></div>}
             {saved.length > 0 && <section className="library-section"><div className="list-heading"><h2>Saved from Discover</h2><span>{saved.length}</span></div><div className="software-list">
-              {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Saved from catalog</small></div><DownloadButton app={app} small /><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
+              {saved.map(app => <article className="compact-row" key={app.id}><AppIcon app={app}/><div className="compact-info"><strong>{app.name}</strong><small>{app.publisher} · Saved from catalog</small></div><InstallButton app={app} small /><DownloadButton app={app} small /><button type="button" className="icon-action" title="Remove from library" aria-label={`Remove ${app.name}`} onClick={() => favorite(app.id)}><Trash2 size={17}/></button></article>)}
             </div></section>}
             {shortcuts.length > 0 && <section className="library-section"><div className="list-heading"><h2>Custom shortcuts</h2><span>{shortcuts.length}</span></div><div className="software-list">
               {shortcuts.map(item => <article className="compact-row" key={item.id}><span className="shortcut-icon">{item.kind === "url" ? <Link2 size={23}/> : <FolderOpen size={23}/>}</span><div className="compact-info"><strong>{item.name}</strong><small title={item.target}>{item.target}</small></div><button type="button" className="outline-button" onClick={() => openShortcut(item)}>{item.kind === "url" ? "Open link" : "Open file"} <ExternalLink size={15}/></button><button type="button" className="icon-action" title="Remove shortcut" aria-label={`Remove ${item.name}`} onClick={() => setShortcuts(xs => xs.filter(x => x.id !== item.id))}><Trash2 size={17}/></button></article>)}
@@ -360,7 +449,7 @@ export default function App() {
             {native && !scanReport && !scanning && <div className="feature-empty">
               <div className="feature-symbol"><Package size={32} strokeWidth={1.3}/></div>
               <h2>Ready to scan</h2>
-              <p>The scan checks local package managers, known application paths and desktop entries for Blender and Krita. It is read-only, stays on this device, and does not contact a server.</p>
+              <p>The read-only scan checks local package managers, known app paths and desktop entries for supported catalog apps, including Blender, Krita and the ArtCraft suite. No information is uploaded.</p>
               <button className="outline-button scan-center-button" type="button" onClick={() => { void scanComputer(); }}>Scan computer <RefreshCw size={16}/></button>
             </div>}
             {native && scanning && <div className="feature-empty" role="status"><RefreshCw size={32} className="spin"/><h2>Checking installed applications...</h2><p>Reading local app locations and available package managers. Nothing is changed.</p></div>}
@@ -382,7 +471,7 @@ export default function App() {
                     <DownloadButton app={app} small />
                   </article>
                 ))}
-                {scanReport.matches.length === 0 && <div className="empty"><Search size={27}/><h3>No catalog apps detected</h3><p>This scan currently recognizes Blender and Krita through supported sources. Portable apps outside known paths may not appear.</p></div>}
+                {scanReport.matches.length === 0 && <div className="empty"><Search size={27}/><h3>No catalog apps detected</h3><p>This scan recognizes catalog apps through supported package managers and known paths. Portable apps outside those locations may not appear.</p></div>}
               </div>
               {scanReport.warnings.length > 0 && <div className="scan-warning">{scanReport.warnings.map(x => <p key={x}>{x}</p>)}</div>}
               <div className="footnote"><Info size={15}/><span>A file or shortcut match does not guarantee that an app works. Updates are not yet managed here. Results are not uploaded.</span></div>
@@ -397,6 +486,43 @@ export default function App() {
           </>
         )}
       </main>
+
+      {installPlan && <div className="modal-backdrop">
+        <div className="modal install-modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
+          <header>
+            <div><p className="eyebrow">SYSTEM INSTALLATION</p>
+              <h2 id="install-title">Install {catalog.find(a => a.id === installPlan.appId)?.name ?? installPlan.appId}</h2>
+            </div>
+            <button type="button" className="icon-action" aria-label="Cancel installation" disabled={installing} onClick={() => setInstallPlan(null)}><X size={19}/></button>
+          </header>
+          <div className="install-details">
+            <div><span>Method</span><strong>{installPlan.method}</strong></div>
+            <div><span>Version</span><strong>{installPlan.version === "repository" ? "From system repository" : installPlan.version}</strong></div>
+            <div><span>Source</span><strong>{installPlan.source}</strong></div>
+            {installPlan.sizeBytes && <div><span>Download size</span><strong>{Math.ceil(installPlan.sizeBytes / 1024 / 1024)} MiB</strong></div>}
+          </div>
+          <p className="install-explanation">{installPlan.message}</p>
+          <p className="install-explanation">
+            {installPlan.manualSteps
+              ? "The application will open the verified disk image. You must finish the installation in Finder."
+              : installPlan.requiresAuthorization
+                ? "Your operating system may show a password or administrator approval prompt. The hub does not bypass it."
+                : "The installation uses the selected provider's normal permission flow."}
+          </p>
+          {installing && <div className="install-status" role="status">
+            <RefreshCw size={17} className="spin"/>
+            <span>{installProgress === null ? "Preparing installer or waiting for system approval..." : `Downloading installer: ${installProgress}% (system approval follows)`}</span>
+          </div>}
+          {installError && <div className="install-error" role="alert">{installError}</div>}
+          <div className="modal-actions">
+            <button type="button" className="outline-button" disabled={installing} onClick={() => setInstallPlan(null)}>Cancel</button>
+            <button type="button" className="black-button" disabled={installing} onClick={() => { void confirmInstallation(); }}>
+              {installing ? "Installing..." : installPlan.manualSteps ? "Open installer" : "Confirm & install"}
+              <ArrowDownToLine size={16}/>
+            </button>
+          </div>
+        </div>
+      </div>}
 
       {adding && <div className="modal-backdrop" role="presentation" onMouseDown={e => {if(e.currentTarget === e.target) setAdding(false);}}>
         <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
