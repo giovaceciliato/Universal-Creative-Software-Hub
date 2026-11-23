@@ -260,6 +260,18 @@ fn check_inner(req: AppRequest) -> Result<CheckResult, String> {
                         reason,
                     });
                 }
+            } else {
+                // Also recognize manually written requests without the structured
+                // marker. They cannot be auto-approved but should not be duplicated.
+                let title_name = issue.title.trim_start_matches("[App Request]").trim();
+                if title_name.eq_ignore_ascii_case(req.name.trim()) {
+                    matches.push(RequestMatch {
+                        name: format!("{} · #{}", title_name, issue.number),
+                        url: issue.html_url,
+                        state: issue.state,
+                        reason: "Richiesta GitHub con lo stesso nome".into(),
+                    });
+                }
             }
         }
         if count < 100 { break; }
