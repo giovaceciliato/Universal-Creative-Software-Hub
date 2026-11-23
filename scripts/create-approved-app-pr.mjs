@@ -91,8 +91,18 @@ const pr = await api("POST", base + "/pulls", {
     "Closes #" + issueNumber,
   ].join("\n"),
 });
+// Dispatch CI explicitly; bot-created PRs do not always trigger standard PR events.
+const dispatchWarnings = [];
+for (const workflowFile of ["frontend-check.yml", "native-build.yml"]) {
+  try {
+    await api("POST", base + "/actions/workflows/" + workflowFile + "/dispatches", {ref: branch});
+  } catch (error) {
+    dispatchWarnings.push(workflowFile + ": " + String(error));
+  }
+}
 await api("POST", base + "/issues/" + issueNumber + "/comments", {
   body: "Request accepted for code review: " + pr.html_url +
-    "\n\nThe app will appear in Discover only after the PR has been reviewed, the checks pass and it is merged into main. Native installation is reviewed separately.",
+    "\n\nThe app will appear in Discover only after the PR has been reviewed, the checks pass and it is merged into main. Native installation is reviewed separately." +
+    (dispatchWarnings.length ? "\n\nCI dispatch warnings: " + dispatchWarnings.join("; ") : ""),
 });
 console.log("Created review PR " + pr.html_url);
