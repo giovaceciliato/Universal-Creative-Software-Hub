@@ -225,3 +225,6 @@ h3 { font-size: 18px; letter-spacing: -.035em; }
   .transfer-meter { flex-wrap:wrap; }
   .transfer-meter-track { flex-basis:100%; }
 }
+
+.downloads-head-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:9px; }
+@media(max-width:650px) { .downloads-head-actions { justify-content:flex-start; } }
