@@ -3,6 +3,11 @@ on:
   issue_comment:
     types: [created]
 
+# Serialize retries for the same issue, including repeated approval comments.
+concurrency:
+  group: approve-app-request-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 permissions:
   actions: write
   contents: write
@@ -32,3 +37,4 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           APPROVER: ${{ github.event.comment.user.login }}
         run: node scripts/create-approved-app-pr.mjs
+

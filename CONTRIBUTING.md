@@ -27,3 +27,12 @@ Open an issue before starting large architectural changes. Prefer small, reviewa
 ## Community standards
 
 Be respectful, provide reproducible bug reports, credit original creators, and respect third-party software licenses.
+
+## Retrying application approval
+
+The approval workflow reuses the existing `app-requests/issue-N` branch and its PR to `main`. It never resets or deletes a review branch. Repeating an approval resumes missing PR creation and missing CI dispatches without duplicating the review notification. A closed or merged PR is left unchanged; review changes to an existing branch manually.
+
+If PR creation returns HTTP 403, check **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests** (and any organization policy). The workflow already requests `contents: write` and `pull-requests: write`; these do not override repository policy. Fix the permission, then retry the failed job or repeat `/approve-app`. Do not delete the branch. Failed CI runs can be rerun from Actions separately.
+
+Run approval regression tests with `node --test scripts/test-create-approved-app-pr.mjs`.
+
