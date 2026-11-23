@@ -45,11 +45,18 @@ function fixture(options = {}) {
 
 async function run(state) {
   const previousFetch = globalThis.fetch;
-  const previousEnv = { ...process.env };
-  Object.assign(process.env, { GITHUB_REPOSITORY: "giovaceciliato/Universal-Creative-Software-Hub", ISSUE_NUMBER: "12", APPROVER: "maintainer", GITHUB_TOKEN: "test-token" });
+  const testEnv = { GITHUB_REPOSITORY: "giovaceciliato/Universal-Creative-Software-Hub", ISSUE_NUMBER: "12", APPROVER: "maintainer", GITHUB_TOKEN: "test-token" };
+  const previousEnv = Object.fromEntries(Object.keys(testEnv).map(key => [key, process.env[key]]));
+  Object.assign(process.env, testEnv);
   globalThis.fetch = state.fetch;
   try { await import("./create-approved-app-pr.mjs?test=" + ++invocation); }
-  finally { globalThis.fetch = previousFetch; process.env = previousEnv; }
+  finally {
+    globalThis.fetch = previousFetch;
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 }
 
 test("fresh approval and repeated retry create one branch, PR, comment and CI run per workflow", async () => {
