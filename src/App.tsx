@@ -195,7 +195,7 @@ export default function App() {
     return <button
       type="button"
       className="outline-button"
-      disabled={Boolean(downloading)}
+      disabled={Boolean(downloading) || Boolean(done)}
       aria-label={`${label} ${app.name}`}
       title={offer ? `Save ${offer.fileName} to your Downloads folder (${Math.round(offer.sizeBytes / 1024 / 1024)} MiB)` : "Open official publisher downloads"}
       onClick={() => { void directDownload(app); }}

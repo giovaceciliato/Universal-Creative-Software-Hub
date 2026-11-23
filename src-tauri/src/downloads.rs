@@ -132,11 +132,12 @@ fn redirect_is_safe(url: &reqwest::Url) -> bool {
     }
     let Some(domain) = url.host_str() else { return false };
     let domain = domain.to_ascii_lowercase();
+    let normalized = domain.trim_start_matches('[').trim_end_matches(']');
     if domain == "localhost"
         || domain.ends_with(".localhost")
         || domain.ends_with(".local")
         || domain.ends_with(".internal")
-        || domain.parse::<IpAddr>().is_ok()
+        || normalized.parse::<IpAddr>().is_ok()
     {
         return false;
     }
@@ -226,7 +227,11 @@ fn download_inner(spec: DownloadSpec, app: AppHandle) -> Result<DownloadResult, 
         if destination.exists() {
             return Err("A file with this name appeared during download; nothing was overwritten.".into());
         }
-        fs::rename(&part, &destination).map_err(|e| format!("Could not finalize download: {e}"))?;
+        // hard_link is create-only: it fails rather than overwriting if another
+        // process created the same name during download.
+        fs::hard_link(&part, &destination)
+            .map_err(|e| format!("Could not finalize download without overwriting: {e}"))?;
+        let _ = fs::remove_file(&part);
         let _ = app.emit("catalog-download-progress", DownloadProgress {
             app_id: spec.app_id.into(),
             received: transferred,
