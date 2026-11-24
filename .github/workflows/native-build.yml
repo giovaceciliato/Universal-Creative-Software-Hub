@@ -2,6 +2,7 @@ name: Native desktop build checks
 
 on:
   workflow_dispatch:
+  workflow_call:
   pull_request:
 
 permissions:
@@ -14,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest, macos-latest]
+        platform: [windows-2025, macos-15]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,39 +26,45 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Generate Tauri icon assets
         run: npm run pretauri
       - name: Run Rust unit tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - name: Build native app
-        run: npm run tauri build
+        run: npm run tauri build -- --locked
         env:
           APPLE_SIGNING_IDENTITY: '-'
+      - name: Validate packaged desktop app
+        run: node scripts/validate-release-package.mjs
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: native-${{ runner.os }}
-          path: src-tauri/target/release/bundle/
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/dmg/*.dmg
           if-no-files-found: error
 
   fedora:
     name: Package Fedora RPM
     runs-on: ubuntu-latest
-    container: fedora:latest
+    container: fedora:45
     steps:
       - uses: actions/checkout@v4
       - name: Install Fedora build dependencies
         run: |
           dnf install -y nodejs npm rust cargo gcc gcc-c++ make git             webkit2gtk4.1-devel openssl-devel curl wget file             libappindicator-gtk3-devel librsvg2-devel libxdo-devel             rpm-build pkgconf-pkg-config patchelf
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Generate Tauri icon assets
         run: npm run pretauri
       - name: Run Rust unit tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - name: Build RPM
-        run: npm run tauri build
+        run: npm run tauri build -- --locked
+      - name: Validate packaged desktop app
+        run: node scripts/validate-release-package.mjs
       - uses: actions/upload-artifact@v4
         if: success()
         with:
