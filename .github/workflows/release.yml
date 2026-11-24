@@ -48,7 +48,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir release-assets
-          find packages -type f \( -name '*.rpm' -o -name '*.exe' -o -name '*.dmg' \) -exec cp {} release-assets/ \;
+          python3 - <<'PYASSETS'
+          from pathlib import Path
+          import shutil
+          names = {'rpm': 'fedora45_x86_64.rpm', 'exe': 'windows_x64-setup.exe', 'dmg': 'macos_aarch64.dmg'}
+          for ext, suffix in names.items():
+              files = list(Path('packages').rglob('*.' + ext))
+              assert len(files) == 1, (ext, files)
+              shutil.copyfile(files[0], Path('release-assets') / ('Universal-Creative-Software-Hub_0.1.0_' + suffix))
+          PYASSETS
           test "$(find release-assets -name '*.rpm' | wc -l)" -eq 1
           test "$(find release-assets -name '*.exe' | wc -l)" -eq 1
           test "$(find release-assets -name '*.dmg' | wc -l)" -eq 1
