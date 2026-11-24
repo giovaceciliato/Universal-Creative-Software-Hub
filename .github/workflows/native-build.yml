@@ -32,7 +32,7 @@ jobs:
       - name: Run Rust unit tests
         run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - name: Build native app
-        run: npm run tauri build -- --locked
+        run: npm run tauri -- build -- --locked
         env:
           APPLE_SIGNING_IDENTITY: '-'
       - name: Validate packaged desktop app
@@ -62,7 +62,7 @@ jobs:
       - name: Run Rust unit tests
         run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - name: Build RPM
-        run: npm run tauri build -- --locked
+        run: npm run tauri -- build -- --locked
       - name: Validate packaged desktop app
         run: node scripts/validate-release-package.mjs
       - uses: actions/upload-artifact@v4

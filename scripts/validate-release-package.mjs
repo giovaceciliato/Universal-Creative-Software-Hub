@@ -17,6 +17,7 @@ if (process.platform === 'linux') {
   run('dnf', ['install', '-y', file]);
   run('rpm', ['-V', 'universal-creative-software-hub']);
 } else if (process.platform === 'darwin') {
+  assert.equal(process.arch, 'arm64', 'This release promises Apple Silicon');
   run('hdiutil', ['verify', file]);
   const app = path.resolve(root, 'macos', 'Universal Creative Software Hub.app');
   run('codesign', ['--verify', '--deep', '--strict', app]);
