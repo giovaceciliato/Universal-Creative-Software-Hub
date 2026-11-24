@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -13,17 +14,27 @@ assert.ok(statSync(file).size > 100000, 'Installer unexpectedly small');
 if (process.platform === 'linux') {
   assert.equal(run('rpm', ['-qp', '--queryformat', '%{VERSION}', file]), version);
   assert.equal(run('rpm', ['-qp', '--queryformat', '%{ARCH}', file]), 'x86_64');
-  run('rpm', ['-K', file]);
-  run('dnf', ['install', '-y', file]);
-  run('rpm', ['-V', 'universal-creative-software-hub']);
+  run('rpm', ['-K', '--nosignature', file]);
+  run('dnf', ['install', '-y', '--nogpgcheck', file]);
+  const packageName = run('rpm', ['-qp', '--queryformat', '%{NAME}', file]);
+  run('rpm', ['-V', packageName]);
 } else if (process.platform === 'darwin') {
   assert.equal(process.arch, 'arm64', 'This release promises Apple Silicon');
   run('hdiutil', ['verify', file]);
-  const app = path.resolve(root, 'macos', 'Universal Creative Software Hub.app');
-  run('codesign', ['--verify', '--deep', '--strict', app]);
-  assert.equal(run('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', `${app}/Contents/Info.plist`]), version);
-  const arch = run('lipo', ['-archs', `${app}/Contents/MacOS/universal-creative-software-hub`]);
-  assert.equal(arch, process.arch === 'arm64' ? 'arm64' : 'x86_64');
+  // Tauri removes the staging .app after creating a DMG. Validate the shipped copy.
+  const mount = mkdtempSync(path.join(tmpdir(), 'ucsh-dmg-'));
+  let mounted = false;
+  try {
+    run('hdiutil', ['attach', '-readonly', '-nobrowse', '-mountpoint', mount, file]);
+    mounted = true;
+    const app = path.join(mount, 'Universal Creative Software Hub.app');
+    run('codesign', ['--verify', '--deep', '--strict', app]);
+    assert.equal(run('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', `${app}/Contents/Info.plist`]), version);
+    assert.equal(run('lipo', ['-archs', `${app}/Contents/MacOS/universal-creative-software-hub`]), 'arm64');
+  } finally {
+    if (mounted) run('hdiutil', ['detach', mount]);
+    rmSync(mount, { recursive: true, force: true });
+  }
 } else if (process.platform === 'win32') {
   const bytes = readFileSync(file);
   assert.equal(bytes.toString('ascii', 0, 2), 'MZ');
