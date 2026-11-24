@@ -20,6 +20,26 @@
         "download": "https://github.com/IPedrax/BIMCraft/releases/latest",
         "sourceCode": "https://github.com/IPedrax/BIMCraft"
       }
+    },
+    {
+      "id": "obsidian",
+      "name": "obsidian",
+      "publisher": "obsidian",
+      "description": "programma di appunti",
+      "categories": [
+        "community"
+      ],
+      "platforms": [
+        "linux",
+        "windows",
+        "macos"
+      ],
+      "pricingModel": "free-open-source",
+      "links": {
+        "website": "https://github.com/obsidianmd/obsidian-releases",
+        "download": "https://github.com/obsidianmd/obsidian-releases/releases/latest",
+        "sourceCode": "https://github.com/obsidianmd/obsidian-releases"
+      }
     }
   ]
 }
